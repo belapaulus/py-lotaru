@@ -8,7 +8,7 @@ class MedianModel:
         self.median = median
 
     def predict(self, x):
-        return x * 0 + self.median
+        return np.full(x.size, self.median)
 
 
 def get_task_model_map(resource_x, resource_y, training_data):
