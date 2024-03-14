@@ -5,54 +5,22 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import BayesianRidge
 from TraceReader import TraceReader
-
-
-class MedianModel:
-    def __init__(self, median):
-        self.median = median
-
-    def predict(self, x):
-        return x * 0 + self.median
-
-
-def get_task_model_map(resource_x, resource_y, training_data):
-    task_model_map = {}
-    for task in training_data["Task"].unique():
-        task_training_data = training_data[training_data["Task"].apply(lambda s: s == task)][:6]
-        x = task_training_data[resource_x].to_numpy()
-        y = task_training_data[resource_y].to_numpy()
-        if np.corrcoef(x, y)[0, 1] < 0.75:
-            model = MedianModel(np.median(y))
-        else:
-            model = BayesianRidge(fit_intercept=True)
-            model.fit(x.reshape(-1, 1), y)
-        task_model_map[task] = model
-    return task_model_map
-
-
-def get_node_factor_map(nodes):
-    scores = pd.read_csv(local_dir + "/benchmarkScores.csv", index_col=0, dtype={"node": "string"})
-    local_cpu = scores.loc["wally", "cpu_score"]
-    local_io = scores.loc["wally", "io_score"]
-    node_factor_map = {}
-    for node in nodes:
-        node_factor_map[node] = ((local_cpu / scores.loc[node, "cpu_score"]) + (
-                local_io / scores.loc[node, "io_score"])) / 2
-    return node_factor_map
-
+from NodeFactor import get_node_factor_map
+from Lotaru import get_task_model_map
 
 if __name__ == '__main__':
     local_dir = os.getcwd()
     nodes = ["asok01", "asok02", "c2", "local", "n1", "n2", "wally"]
 
     parser = argparse.ArgumentParser(prog='lotaru2')
-    parser.add_argument('-t', '--trace_dir', default=os.path.join(local_dir, "traces"))
+    parser.add_argument('-b', '--benchmark_dir', default=os.path.join("data", "benchmarks"))
+    parser.add_argument('-e', '--experiment_number', default="1")
+    parser.add_argument('-s', '--scale', action='store_true', default=False)
+    parser.add_argument('-t', '--trace_dir', default=os.path.join("data", "traces"))
+    parser.add_argument('-v', '--verbose', action='store_true', default=False)
     parser.add_argument('-w', '--workflow', default="eager")
     parser.add_argument('-x', '--resource_x', default="TaskInputSizeUncompressed")
     parser.add_argument('-y', '--resource_y', default="%cpu")
-    parser.add_argument('-s', '--scale', action='store_true', default=False)
-    parser.add_argument('-e', '--experiment_number', default="1")
-    parser.add_argument('-v', '--verbose', action='store_true', default=False)
     args = parser.parse_args()
     for arg in vars(args).items():
         print(arg)
@@ -63,7 +31,7 @@ if __name__ == '__main__':
 
     task_model_map = get_task_model_map(args.resource_x, args.resource_y, training_data)
     if args.scale:
-        node_factor_map = get_node_factor_map(nodes)
+        node_factor_map = get_node_factor_map(args.benchmark_dir)
 
     # predict and evaluate
     for node in nodes:
