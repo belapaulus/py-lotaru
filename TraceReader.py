@@ -34,6 +34,8 @@ class TraceReader:
 
     def read_training_data(self, workflow, experiment_number):
         all_data = self.read_trace(workflow.lower(), "local")
+        if experiment_number == "0":
+            return all_data[all_data["Label"].apply(lambda s: s[:6] == "train-")]
         return all_data[all_data["Label"] == ("train-" + experiment_number)]
 
     def read_test_data(self, workflow, node):
