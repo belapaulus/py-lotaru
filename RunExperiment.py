@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-from Lotaru import LotaruInstance
+from LotaruInstance import LotaruInstance
 from TraceReader import TraceReader
 
-# runs an experiment, returns resuls as pandas dataframe
+# runs an experiment, returns results as pandas dataframe
 def run_experiment(
         workflows=["eager", "methylseq", "chipseq", "atacseq", "bacass"],
         nodes=["asok01", "asok02", "n1", "n2", "c2", "local"],
