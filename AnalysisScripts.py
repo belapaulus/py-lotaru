@@ -5,8 +5,8 @@ from functools import wraps
 
 import numpy as np
 import matplotlib.pyplot as plt
-import click
 
+from LotaruInstance import MedianModel
 from RunExperiment import run_experiment
 
 class AnalysisScript:
@@ -158,7 +158,7 @@ def workflow_node_error(args):
 @register
 @option("-e", "--experiment-number", default="1")
 @option("-w", "--workflow", default="eager")
-@option("--scale-bayesian-model", action="store_true", default=True)
+@option("--scale-bayesian-model",  action="store_true", default=True)
 @option("--scale-median-model", action="store_true", default=False)
 @option('-x', '--resource-x', default="TaskInputSizeUncompressed")
 @option('-y', '--resource-y', default="Realtime")
@@ -178,4 +178,16 @@ def node_task_error(args):
     plt.show()
 
 
-
+@register
+@option("--scale", choices=["log", "linear"], default="log")
+@analysis
+def scale_median_model(args):
+    results_scaled = run_experiment(scale_median_model=True)
+    results_unscaled = run_experiment(scale_median_model=False)
+    def get_errors(df):
+        return df[df["model"] == MedianModel].apply(lambda row: np.abs(row["y"] - row["yhat"]) / row["yhat"], axis=1)
+    errors_scaled = get_errors(results_scaled)
+    errors_unscaled = get_errors(results_unscaled)
+    plt.yscale(args.scale)
+    plt.boxplot([list(errors_scaled), list(errors_unscaled)], labels=["scaled", "unscaled"])
+    plt.show()

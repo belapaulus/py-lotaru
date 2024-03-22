@@ -44,7 +44,7 @@ class Lotaru2:
             print("invalid experiment number", file=sys.stderr)
             exit(-1)
         
-        parser = argparse.ArgumentParser(prog="lotaru2")
+        parser = argparse.ArgumentParser(prog="lotaru2 run <script_number>")
         analysis_script.func(parser, args[1:])
 
 

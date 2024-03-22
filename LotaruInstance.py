@@ -61,3 +61,6 @@ class LotaruInstance:
 
     def get_tasks(self):
         return self.tasks
+
+    def get_model_for_task(self, task):
+        return self.task_model_map[task]
