@@ -2,6 +2,7 @@
 import os
 import sys
 import argparse
+import warnings
 
 from AnalysisScripts import analysis_scripts
 
@@ -52,5 +53,7 @@ class Lotaru2:
         print("this will print a help message")
 
 if __name__ == "__main__":
+    warnings.filterwarnings("ignore")
     lotaru2 = Lotaru2()
     lotaru2.start(sys.argv[1:])
+
