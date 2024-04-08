@@ -6,6 +6,7 @@ from functools import wraps
 import numpy as np
 import matplotlib.pyplot as plt
 
+from TraceReader import TraceReader
 from LotaruInstance import MedianModel
 from RunExperiment import run_experiment
 
@@ -191,3 +192,22 @@ def scale_median_model(args):
     plt.yscale(args.scale)
     plt.boxplot([list(errors_scaled), list(errors_unscaled)], labels=["scaled", "unscaled"])
     plt.show()
+
+
+@register
+@option("-w", "--workflow", default="eager")
+@option("-e", "--experiment-number", default="1")
+@analysis
+def training_traces(args):
+    trace_reader = TraceReader(os.path.join("data", "traces"))
+    all_data = trace_reader.get_trace(args.workflow.lower(), "local")
+    if args.experiment_number == "0":
+        all_training_data = all_data[all_data["Label"].apply(lambda s: s[:6] == "train-")]
+    else:
+        all_training_data = all_data[all_data["Label"] == ("train-" + args.experiment_number)]
+    results = all_training_data.groupby(["Workflow", "WorkflowInputSize", "Task"]).count()
+    results.drop(labels=results.columns[1:], axis=1, inplace=True)
+    results.columns = ["count"]
+    print("unique number of traces per workflow workflow input size and task: ", results["count"].unique())
+
+
