@@ -6,93 +6,14 @@ from functools import wraps
 import numpy as np
 import matplotlib.pyplot as plt
 
-from TraceReader import TraceReader
-from LotaruInstance import MedianModel
-from RunExperiment import run_experiment
-#from prucio import get_prucio_predictions
+from lotaru.analysis.analysis_script import AnalysisScript, register, option, analysis, toBool
+from lotaru.TraceReader import TraceReader
+from lotaru.LotaruInstance import MedianModel
+from lotaru.RunExperiment import run_experiment
 
-class AnalysisScript:
-    def __init__(self, name, description, func):
-        self.name = name
-        self.description = description
-        self.func = func
+registered_scripts = []
 
-analysis_scripts = []
-
-def toBool(s):
-    if not (s == "True" or s == "False"):
-        raise RuntimeError
-    return s == "True"
-
-# decorators break my head
-# so what is supposed to happen?
-#
-# @option(...)
-# def my_func():
-#   ...
-#
-# translates to the following:
-#
-# def my_func():
-#   ...
-# my_func = option(...)(my_func)
-#
-# so option(...) has to return a function that takes my_func as an argument
-# and then returns another function that we will call when we call my_func
-#
-# my current idea is as follows:
-# I want to be able to call the resulting my_func with an arg_parser and
-# argument_string as arguments like so: my_func(arg_parser, argument_string)
-# each option decorator shall add one option to the arg_parser
-# and a final @run decorator shall parse the argument_string with the
-# arg_parser we just constructed and then call the original my_func with
-# the parsed arguments
-#
-# does that work?
-"""
-@option(...)
-@analysis
-def func:
-    ...
-
-is the same as
-
-def func:
-    ...
-setup = option(...)
-f1 = analysis(func)
-func = setup(f1)
-
-func(parser, args) becomes the func_to_return from  setup, it adds an option to the parser
-it then call the func_to_return from analysis which parses the arguments and call the
-original function
-
-"""
-
-def register(func):
-    analysis_scripts.append(AnalysisScript(func.__name__, func.__doc__, func))
-    return func
-
-
-def option(*args, **kwargs):
-    def setup(func):
-        @wraps(func)
-        def func_to_return(arg_parser, arg_string):
-            arg_parser.add_argument(*args, **kwargs)
-            func(arg_parser, arg_string)
-        return func_to_return
-    return setup
-
-
-def analysis(func):
-    @wraps(func)
-    def func_to_return(arg_parser, arg_string):
-        args = arg_parser.parse_args(arg_string)
-        func(args)
-    return func_to_return
-
-
-@register
+@register(registered_scripts)
 @option("-e", "--experiment_number", default="1")
 @analysis
 def node_error(args):
@@ -109,7 +30,7 @@ def node_error(args):
     print(median_errors)
 
 
-@register
+@register(registered_scripts)
 @analysis
 def results_csv(args):
     """
@@ -131,7 +52,7 @@ def results_csv(args):
 
 
 
-@register
+@register(registered_scripts)
 @option("--scale-bayesian-model",  type=toBool, default=True)
 @option("--scale-median-model", type=toBool, default=False)
 @option('-x', '--resource-x', default="TaskInputSizeUncompressed")
@@ -169,7 +90,7 @@ def workflow_node_error(args):
         plt.boxplot(data, labels=nodes)
     plt.show()
 
-@register
+@register(registered_scripts)
 @option("-w", "--workflow", default="eager")
 @option("--scale-bayesian-model",  type=toBool, default=True)
 @option("--scale-median-model", type=toBool, default=False)
@@ -199,7 +120,7 @@ def node_task_error(args):
     plt.show()
 
 
-@register
+@register(registered_scripts)
 @option("--scale", choices=["log", "linear"], default="log")
 @analysis
 def scale_median_model(args):
@@ -214,7 +135,7 @@ def scale_median_model(args):
     plt.show()
 
 
-@register
+@register(registered_scripts)
 @option("-w", "--workflow", default="eager")
 @option("-e", "--experiment-number", default="1")
 @analysis

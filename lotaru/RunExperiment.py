@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-from LotaruInstance import LotaruInstance
-from TraceReader import TraceReader
+from lotaru.LotaruInstance import LotaruInstance
+from lotaru.TraceReader import TraceReader
 
 # runs an experiment, returns results as pandas dataframe
 def run_experiment(

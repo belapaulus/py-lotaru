@@ -3,7 +3,7 @@ import os
 import numpy as np
 from sklearn.linear_model import BayesianRidge
 
-from NodeFactor import get_node_factor_map
+from lotaru.NodeFactor import get_node_factor_map
 
 
 class MedianModel:
