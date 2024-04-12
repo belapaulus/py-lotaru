@@ -18,6 +18,11 @@ class AnalysisScript:
 
 analysis_scripts = []
 
+def toBool(s):
+    if not (s == "True" or s == "False"):
+        raise RuntimeError
+    return s == "True"
+
 # decorators break my head
 # so what is supposed to happen?
 #
@@ -157,15 +162,23 @@ def workflow_node_error(args):
     plt.show()
 
 @register
-@option("-e", "--experiment-number", default="1")
 @option("-w", "--workflow", default="eager")
-@option("--scale-bayesian-model",  action="store_true", default=True)
-@option("--scale-median-model", action="store_true", default=False)
+@option("--scale-bayesian-model",  type=toBool, default=True)
+@option("--scale-median-model", type=toBool, default=False)
 @option('-x', '--resource-x', default="TaskInputSizeUncompressed")
 @option('-y', '--resource-y', default="Realtime")
 @analysis
 def node_task_error(args):
-    results = run_experiment(workflows=[args.workflow])
+    """
+    creates a plot showing the average relative error
+    for each task on different nodes for the given workflow
+    """
+    results = run_experiment(
+            resource_x=args.resource_x,
+            resource_y=args.resource_y,
+            scale_bayesian_model=args.scale_bayesian_model,
+            scale_median_model=args.scale_median_model,
+            workflows=[args.workflow])
     nodes = results["node"].unique()
     def average_relative_error(x):
         return np.mean(np.abs(x["y"] - x["yhat"]) / x["yhat"])
@@ -173,7 +186,6 @@ def node_task_error(args):
     for node in nodes:
         task_err_map = grouped[node].to_dict()
         plt.scatter(task_err_map.keys(), task_err_map.values())
-
     plt.xticks(rotation=-45, ha='left')
     plt.legend(nodes)
     plt.show()
@@ -209,5 +221,4 @@ def training_traces(args):
     results.drop(labels=results.columns[1:], axis=1, inplace=True)
     results.columns = ["count"]
     print("unique number of traces per workflow workflow input size and task: ", results["count"].unique())
-
 
