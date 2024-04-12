@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from TraceReader import TraceReader
 from LotaruInstance import MedianModel
 from RunExperiment import run_experiment
+#from prucio import get_prucio_predictions
 
 class AnalysisScript:
     def __init__(self, name, description, func):
@@ -131,6 +132,10 @@ def results_csv(args):
 
 
 @register
+@option("--scale-bayesian-model",  type=toBool, default=True)
+@option("--scale-median-model", type=toBool, default=False)
+@option('-x', '--resource-x', default="TaskInputSizeUncompressed")
+@option('-y', '--resource-y', default="Realtime")
 @analysis
 def workflow_node_error(args):
     """
@@ -139,7 +144,11 @@ def workflow_node_error(args):
     each boxplot shows the distribution of the relative absolute error
     over all the traces of the given workflow that ran on the given node
     """
-    results = run_experiment()
+    results = run_experiment(
+            resource_x=args.resource_x,
+            resource_y=args.resource_y,
+            scale_bayesian_model=args.scale_bayesian_model,
+            scale_median_model=args.scale_median_model)
     workflows = results["workflow"].unique()
     nodes = results["node"].unique()
     def relative_absolute_error(x):
@@ -157,8 +166,7 @@ def workflow_node_error(args):
         data = []
         for node in nodes:
             data.append(grouped[(workflow, node)].to_numpy())
-        plt.boxplot(data)
-
+        plt.boxplot(data, labels=nodes)
     plt.show()
 
 @register
