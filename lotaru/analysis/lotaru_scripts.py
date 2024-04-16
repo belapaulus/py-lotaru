@@ -15,6 +15,10 @@ registered_scripts = []
 
 @register(registered_scripts)
 @option("-e", "--experiment_number", default="1")
+@option("--scale-bayesian-model",  type=toBool, default=True)
+@option("--scale-median-model", type=toBool, default=False)
+@option('-x', '--resource-x', default="TaskInputSizeUncompressed")
+@option('-y', '--resource-y', default="Realtime")
 @analysis
 def node_error(args):
     """
@@ -22,7 +26,12 @@ def node_error(args):
     for each node over all workflows and tasks
     """
     print("node_error was called with: ", args)
-    results = run_experiment(experiment_number=args.experiment_number)
+    results = run_experiment(
+            resource_x=args.resource_x,
+            resource_y=args.resource_y,
+            scale_bayesian_model=args.scale_bayesian_model,
+            scale_median_model=args.scale_median_model,
+            experiment_number=args.experiment_number)
     # TODO row is misleading, this is a dataframe?
     def median_error(row):
         return np.median(np.abs(row["y"] - row["yhat"]) / row["yhat"])
