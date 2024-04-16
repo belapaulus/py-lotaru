@@ -38,6 +38,10 @@ class TraceReader:
             self.wf_node_trace_map[workflow + node] = pd.read_csv(str(path), dtype=dtypes)
         return self.wf_node_trace_map[workflow + node]
 
+    def get_task_data(self, workflow, task, node):
+        all_data = self.get_trace(workflow, node)
+        return all_data[all_data["Task"] == task]
+
     # use experiment_number = "0" to return all training data
     def get_training_data(self, workflow, experiment_number):
         all_data = self.get_trace(workflow.lower(), "local")

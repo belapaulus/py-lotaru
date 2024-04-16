@@ -2,6 +2,7 @@ import sys
 import argparse
 
 from lotaru.analysis.lotaru_scripts import registered_scripts as lotaru_scripts
+from lotaru.analysis.trace_scripts import registered_scripts as trace_scripts
 
 class Cli:
     def __init__(self):
@@ -11,7 +12,8 @@ class Cli:
             "run": self.run,
             "help": self.help
             }
-        self.script_list = sorted(lotaru_scripts, key=lambda x: x.name)
+        all_scripts = lotaru_scripts + trace_scripts
+        self.script_list = sorted(all_scripts, key=lambda x: x.name)
         self.script_dict = {}
         for script in self.script_list:
             if script.name in self.script_dict:
