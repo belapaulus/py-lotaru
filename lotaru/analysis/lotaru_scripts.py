@@ -22,8 +22,8 @@ registered_scripts = []
 @analysis
 def node_error(args):
     """
-    returns the median relative prediction error
-    for each node over all workflows and tasks
+    Returns the median relative prediction error for each node, over all workflows
+    and tasks.
     """
     print("node_error was called with: ", args)
     results = run_experiment(
@@ -45,8 +45,13 @@ def node_error(args):
 @analysis
 def results_csv(args):
     """
-    writes the predictions for all workflows, tasks, nodes, and experiment_numbers
-    to stdout. Output format is as follows:
+    Writes the predictions for all workflows, tasks, nodes, and given experiment
+    numbers to a given file or stdout. If '-o' is not specified or '-o -' is given
+    the predictions are written to stdout. In any other case the argument to '-o'
+    is treated as the path of the file to write to. This script refuses to
+    overwrite existing files.
+
+    Output format is as follows:
 
     workflow;task;node;x;y
     """
@@ -78,10 +83,12 @@ def results_csv(args):
 @analysis
 def workflow_node_error(args):
     """
-    creates one figure for each workflow
-    each figure shows boxplots for each node
-    each boxplot shows the distribution of the relative absolute error
-    over all the traces of the given workflow that ran on the given node
+    Visualizes the distribution of relative absolute error over all traces nodes
+    and workflows.
+
+    Creates one figure for each workflow. Each figure shows boxplots for each
+    node and each boxplot shows the distribution of the relative absolute error
+    over all the traces of the given workflow that ran on the given node.
     """
     results = run_experiment(
             resource_x=args.resource_x,
@@ -117,8 +124,8 @@ def workflow_node_error(args):
 @analysis
 def node_task_error(args):
     """
-    creates a plot showing the average relative error
-    for each task on different nodes for the given workflow
+    Creates a plot showing the average relative error for each task and node for
+    the given workflow.
     """
     results = run_experiment(
             resource_x=args.resource_x,
@@ -142,6 +149,11 @@ def node_task_error(args):
 @option("--scale", choices=["log", "linear"], default="log")
 @analysis
 def scale_median_model(args):
+    '''
+    Answers the question if lotaru should scale the outputs of its median models.
+    Shows the distribution of errors of predictions made with scaled median models
+    and unscaled median models.
+    '''
     results_scaled = run_experiment(scale_median_model=True)
     results_unscaled = run_experiment(scale_median_model=False)
     def get_errors(df):
@@ -158,6 +170,15 @@ def scale_median_model(args):
 @option("-e", "--experiment-number", default="1")
 @analysis
 def training_traces(args):
+    '''
+    Let x be the number of instances of a given task during one workflow execution.
+    This script prints the unique values of x for all tasks and workflow executions
+    in our traces.
+
+    For example if x is [1] that means that during all workflow exections each task
+    had only one instance. If x is [1, 2] that means some tasks during some workflow
+    executions had two instances while the others only had one.
+    '''
     trace_reader = TraceReader(os.path.join("data", "traces"))
     all_data = trace_reader.get_trace(args.workflow.lower(), "local")
     if args.experiment_number == "0":

@@ -13,6 +13,10 @@ registered_scripts = []
 @option("-y", default="Realtime")
 @analysis
 def show_correlation(args):
+    '''
+    Visualize the relationship between two features in our traces for a given workflow.
+    Creates on scatter plot per task.
+    '''
     tr = TraceReader(os.path.join("data", "traces"))
     #workflows=["eager", "methylseq", "chipseq", "atacseq", "bacass"],
     nodes = ["asok01", "asok02", "n1", "n2", "c2", "local"]

@@ -25,7 +25,6 @@ prints a general help to get started.
 
 ## To-dos
 
- - document undocumented scripts
  - document how to add scripts
  - add titles, descriptions, legends to figures
  - add tests
