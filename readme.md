@@ -28,7 +28,6 @@ prints a general help to get started.
  - document undocumented scripts
  - document how to add scripts
  - add titles, descriptions, legends to figures
- - fix test
  - add tests
  - try to improve prucio results (feature importance)
  - implement the predictors used as baselines in the papers
