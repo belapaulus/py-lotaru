@@ -40,6 +40,8 @@ def node_error(args):
 
 
 @register(registered_scripts)
+@option('-e', '--experiment-number', nargs='+', default=['1', '2'])
+@option('-o', '--output-file', default='-')
 @analysis
 def results_csv(args):
     """
@@ -48,17 +50,24 @@ def results_csv(args):
 
     workflow;task;node;x;y
     """
-    for i in [1, 2]:
+    out = ""
+    for i in args.experiment_number:
         results = run_experiment(experiment_number=str(i))
-        def print_row(row):
-            print(";".join([
-                row["workflow"],
-                row["task"].lower(),
-                row["node"],
-                str(int(row["x"])),
-                str(int(row["y"]))]))
-        results.apply(print_row, axis=1)
-
+        results["workflow"] = results["workflow"].apply(lambda s: s.lower())
+        results["task"] = results["task"].apply(lambda s: s.lower())
+        results["node"] = results["node"].apply(lambda s: s.lower())
+        results["x"] = results["x"].apply(lambda x: int(x))
+        results["y"] = results["y"].apply(lambda y: int(y))
+        out += results.to_csv(sep=";", columns=["workflow", "task", "node", "x", "y"],
+                header=False, index=False)
+    if args.output_file == "-":
+        print(out)
+        return
+    if os.path.isfile(args.output_file):
+        print("refusing to overwrite existing file", file=sys.stderr)
+        exit(-1)
+    with open(args.output_file, "w") as file:
+        file.write(out)
 
 
 @register(registered_scripts)

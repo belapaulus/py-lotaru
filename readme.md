@@ -25,11 +25,12 @@ prints a general help to get started.
 
 ## To-dos
 
- - add option to save csv to `results_csv` script
  - check usage of `experiment_number` in `node_error` script
  - document undocumented scripts
  - document how to add scripts
  - add titles, descriptions, legends to figures
+ - fix test
+ - add tests
  - try to improve prucio results (feature importance)
  - implement the predictors used as baselines in the papers
  - refactor prediction code that it can be used as a stand-alone program?
