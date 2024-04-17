@@ -23,9 +23,11 @@ def run_experiment(
     # create one lotaru instance per workflow
     workflow_lotaru_instance_map = {}
     for workflow in workflows:
-        workflow_lotaru_instance_map[workflow] = LotaruInstance(workflow, experiment_number,
-                resource_x, resource_y, trace_reader, scale_bayesian_model, scale_median_model)
-        workflow_lotaru_instance_map[workflow].train_models()
+        training_data = trace_reader.get_training_data(workflow, experiment_number,
+                resource_x, resource_y)
+        li = LotaruInstance(training_data, scale_bayesian_model, scale_median_model)
+        li.train_models()
+        workflow_lotaru_instance_map[workflow] = li
 
     results = pd.DataFrame(columns=["workflow", "task", "node", "model", "x", "yhat", "y"])
     # print predictions for all workflows, tasks and nodes

@@ -25,7 +25,6 @@ prints a general help to get started.
 
 ## To-dos
 
- - check usage of `experiment_number` in `node_error` script
  - document undocumented scripts
  - document how to add scripts
  - add titles, descriptions, legends to figures

@@ -15,33 +15,19 @@ class MedianModel:
 
 
 class LotaruInstance:
-    def __init__(self, workflow, experiment_number, resource_x, resource_y, trace_reader,
-                 scale_bayesian_model, scale_median_model):
-        self.workflow = workflow
-        self.experiment_number = experiment_number
-        self.resource_x = resource_x
-        self.resource_y = resource_y
-        self.trace_reader = trace_reader
+    def __init__(self, training_data, scale_bayesian_model, scale_median_model):
+        self.training_data = training_data
         self.scale_bayesian_model = scale_bayesian_model
         self.scale_median_model = scale_median_model
-
-        self.training_data = trace_reader.get_training_data(workflow, experiment_number)
-        self.tasks = self.training_data["Task"].unique()
-        self.task_training_data_map = {}
-        for task in self.tasks:
-            self.task_training_data_map[task] = self.training_data[self.training_data["Task"].apply(
-                lambda s: s == task)][:6]
-
+        self.tasks = self.training_data.keys()
         if scale_bayesian_model or scale_median_model:
             self.node_factor_map = get_node_factor_map(os.path.join("data", "benchmarks"))
-
         self.task_model_map = {}
 
     def train_models(self):
-        self.task_model_map = {}
         for task in self.tasks:
-            x = self.task_training_data_map[task][self.resource_x].to_numpy()
-            y = self.task_training_data_map[task][self.resource_y].to_numpy()
+            x = self.training_data[task]["x"].to_numpy()
+            y = self.training_data[task]["y"].to_numpy()
             pearson = np.corrcoef(x, y)[0, 1]
             if np.isnan(pearson) or pearson < 0.75:
                 model = MedianModel(np.median(y))

@@ -42,13 +42,45 @@ class TraceReader:
         all_data = self.get_trace(workflow, node)
         return all_data[all_data["Task"] == task]
 
+    def _get_task_training_data(self, local_traces, task, label, resource_x, resource_y):
+        task_traces = local_traces[local_traces["Task"] == task]
+        training_traces = task_traces[task_traces["Label"] == label][:6]
+        training_data = training_traces[[resource_x, resource_y]]
+        training_data.columns = ["x", "y"]
+        training_data.reset_index().drop("index", axis=1)
+        return training_data
+
     # use experiment_number = "0" to return all training data
-    def get_training_data(self, workflow, experiment_number):
-        all_data = self.get_trace(workflow.lower(), "local")
-        if experiment_number == "0":
-            training_data = all_data[all_data["Label"].apply(lambda s: s[:6] == "train-")]
-        else:
-            training_data = all_data[all_data["Label"] == ("train-" + experiment_number)]
+    def get_training_data(self, workflow, experiment_number, resource_x, resource_y):
+        '''
+        Returns training data for the given workflow.
+        The return value is a dictionary with workflow task names as keys and
+        dataframes as values. The dataframes contain to columns x and y.
+
+        Training data for a given workflow consists of traces from the local
+        machine, that contain the label "train-1" or "train-2". The experiment number
+        lets us choose between "train-1" and "train-2". Experiment number "0" will
+        return all traces containing either.
+
+        But not all traces with the train-? label qualify as training data. Only those,
+        that have among the smallest six workflow input sizes per task and experiment
+        number shall be used.
+        '''
+        assert(experiment_number in ["0", "1", "2"])
+        local_traces = self.get_trace(workflow.lower(), "local")
+        tasks = local_traces["Task"].unique()
+        training_data = {}
+        for task in tasks:
+            task_training_data = pd.DataFrame(columns=["x", "y"], dtype="int64")
+            if experiment_number in ["0", "1"]:
+                df = self._get_task_training_data(local_traces, task, "train-1",
+                        resource_x, resource_y)
+                task_training_data = pd.concat([task_training_data, df])
+            if experiment_number in ["0", "2"]:
+                df = self._get_task_training_data(local_traces, task, "train-2",
+                        resource_x, resource_y)
+                task_training_data = pd.concat([task_training_data, df])
+            training_data[task] = task_training_data.reset_index().drop("index", axis=1)
         return training_data
 
     def get_test_data(self, workflow, task, node):
