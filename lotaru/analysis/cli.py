@@ -4,6 +4,7 @@ import argparse
 from lotaru.analysis.lotaru_scripts import registered_scripts as lotaru_scripts
 from lotaru.analysis.trace_scripts import registered_scripts as trace_scripts
 
+
 class Cli:
     def __init__(self):
         self.commands = {
@@ -11,7 +12,7 @@ class Cli:
             "describe": self.describe,
             "run": self.run,
             "help": self.help
-            }
+        }
         all_scripts = lotaru_scripts + trace_scripts
         self.script_list = sorted(all_scripts, key=lambda x: x.name)
         self.script_dict = {}
@@ -61,9 +62,8 @@ class Cli:
         except KeyError:
             print("invalid experiment name", file=sys.stderr)
             exit(-1)
-        
         parser = argparse.ArgumentParser(prog="python -m lotaru run {}".format(script.name),
-                description=script.description)
+                                         description=script.description)
         script.func(parser, args[1:])
 
     def help(self, command):
@@ -80,7 +80,10 @@ class Cli:
             Run help <command> for more information.
             """.format(", ".join(self.commands.keys()))
             print(msg)
-        else:
+            return
+
+        if command[0] in self.commands:
             print(self.commands[command[0]].__doc__)
+            return
 
-
+        print("unknown command: " + command[0])
