@@ -76,7 +76,7 @@ def results_csv(args):
 
 
 @register(registered_scripts)
-@option('-s', '--save')
+@option('-s', '--save', default="")
 @option("--scale-bayesian-model",  type=toBool, default=True)
 @option("--scale-median-model", type=toBool, default=False)
 @option('-x', '--resource-x', default="TaskInputSizeUncompressed")
@@ -126,13 +126,14 @@ def workflow_node_error(args):
         plt.show()
 
 
-@ register(registered_scripts)
-@ option("-w", "--workflow", default="eager")
-@ option("--scale-bayesian-model",  type=toBool, default=True)
-@ option("--scale-median-model", type=toBool, default=False)
-@ option('-x', '--resource-x', default="TaskInputSizeUncompressed")
-@ option('-y', '--resource-y', default="Realtime")
-@ analysis
+@register(registered_scripts)
+@option('-s', '--save', default="")
+@option("-w", "--workflow", default="eager")
+@option("--scale-bayesian-model",  type=toBool, default=True)
+@option("--scale-median-model", type=toBool, default=False)
+@option('-x', '--resource-x', default="TaskInputSizeUncompressed")
+@option('-y', '--resource-y', default="Realtime")
+@analysis
 def node_task_error(args):
     """
     Creates a plot showing the average relative error for each task and node for
@@ -149,16 +150,26 @@ def node_task_error(args):
     def average_relative_error(x):
         return np.mean(np.abs(x["y"] - x["yhat"]) / x["yhat"])
     grouped = results.groupby(["node", "task"]).apply(average_relative_error)
+    fig, axs = plt.subplots(1, 1, figsize=(5, 5))
     for node in nodes:
         task_err_map = grouped[node].to_dict()
-        plt.scatter(task_err_map.keys(), task_err_map.values())
-    plt.xticks(rotation=-45, ha='left')
-    plt.legend(nodes)
-    plt.show()
+        axs.scatter(task_err_map.keys(), task_err_map.values())
+    axs.set_xticklabels(list(task_err_map.keys()), rotation=-90, ha='left')
+    axs.set_ylabel("average relative error")
+    axs.set_xlabel("task")
+    axs.set_title(
+        f"average relative error per task and node for {args.workflow}")
+    axs.legend(nodes)
+    fig.tight_layout()
+    if args.save != "":
+        plt.savefig(args.save)
+    else:
+        plt.show()
 
 
 @ register(registered_scripts)
 @ option("--scale", choices=["log", "linear"], default="log")
+@option('-s', '--save', default="")
 @ analysis
 def scale_median_model(args):
     '''
@@ -173,10 +184,18 @@ def scale_median_model(args):
         return df[df["model"] == MedianModel].apply(lambda row: np.abs(row["y"] - row["yhat"]) / row["yhat"], axis=1)
     errors_scaled = get_errors(results_scaled)
     errors_unscaled = get_errors(results_unscaled)
-    plt.yscale(args.scale)
-    plt.boxplot([list(errors_scaled), list(errors_unscaled)],
+    fig, axs = plt.subplots(1, 1, figsize=(5, 5))
+    axs.boxplot([list(errors_scaled), list(errors_unscaled)],
                 labels=["scaled", "unscaled"])
-    plt.show()
+    axs.set_ylabel("relative absolute error")
+    axs.set_yscale(args.scale)
+    axs.set_xlabel("type of median model")
+    axs.set_title("performace of scaled and unscaled median models")
+    fig.tight_layout()
+    if args.save != "":
+        plt.savefig(args.save)
+    else:
+        plt.show()
 
 
 @ register(registered_scripts)
