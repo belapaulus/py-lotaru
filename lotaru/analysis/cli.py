@@ -40,8 +40,8 @@ class Cli:
 
     def describe(self, args):
         """
-        Print the help message for a given analysis script. This is equivalent to
-        run <script> --help
+        Print the help message for a given analysis script. This is equivalent
+        to run <script> --help
         """
         self.run([args[0], "--help"])
 
@@ -62,8 +62,9 @@ class Cli:
         except KeyError:
             print("invalid experiment name", file=sys.stderr)
             exit(-1)
-        parser = argparse.ArgumentParser(prog="python -m lotaru run {}".format(script.name),
-                                         description=script.description)
+        parser = argparse.ArgumentParser(
+            prog="python -m lotaru run {}".format(script.name),
+            description=script.description)
         script.func(parser, args[1:])
 
     def help(self, command):

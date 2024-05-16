@@ -1,6 +1,6 @@
 """
-Data structures, functions and decorators to define and register analysis scripts
-that can be executed via the cli.
+Data structures, functions and decorators to define and register analysis
+scripts that can be executed via the cli.
 
 Decorators are used to:
  - declare a function as an analysis script
@@ -10,14 +10,15 @@ Decorators are used to:
 For an explanation on how decorators work see:
 https://peps.python.org/pep-0318/
 """
-import argparse
 from functools import wraps
+
 
 class AnalysisScript:
     def __init__(self, name, description, func):
         self.name = name
         self.description = description
         self.func = func
+
 
 def register(func_list):
     def setup(func):
@@ -43,6 +44,7 @@ def analysis(func):
         func(args)
     return func_to_return
 
+
 def toBool(s):
     """
     helper to parse boolean options
@@ -50,4 +52,3 @@ def toBool(s):
     if not (s == "True" or s == "False"):
         raise RuntimeError
     return s == "True"
-

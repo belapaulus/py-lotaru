@@ -1,7 +1,5 @@
 import os
 import sys
-import argparse
-from functools import wraps
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,6 +11,7 @@ from lotaru.RunExperiment import run_experiment
 
 registered_scripts = []
 
+
 @register(registered_scripts)
 @option("-e", "--experiment_number", default="1")
 @option("--scale-bayesian-model",  type=toBool, default=True)
@@ -22,17 +21,18 @@ registered_scripts = []
 @analysis
 def node_error(args):
     """
-    Returns the median relative prediction error for each node, over all workflows
-    and tasks.
+    Returns the median relative prediction error for each node, over all
+    workflows and tasks.
     """
     print("node_error was called with: ", args)
     results = run_experiment(
-            resource_x=args.resource_x,
-            resource_y=args.resource_y,
-            scale_bayesian_model=args.scale_bayesian_model,
-            scale_median_model=args.scale_median_model,
-            experiment_number=args.experiment_number)
+        resource_x=args.resource_x,
+        resource_y=args.resource_y,
+        scale_bayesian_model=args.scale_bayesian_model,
+        scale_median_model=args.scale_median_model,
+        experiment_number=args.experiment_number)
     # TODO row is misleading, this is a dataframe?
+
     def median_error(row):
         return np.median(np.abs(row["y"] - row["yhat"]) / row["yhat"])
     median_errors = results.groupby("node").apply(median_error)
@@ -45,11 +45,11 @@ def node_error(args):
 @analysis
 def results_csv(args):
     """
-    Writes the predictions for all workflows, tasks, nodes, and given experiment
-    numbers to a given file or stdout. If '-o' is not specified or '-o -' is given
-    the predictions are written to stdout. In any other case the argument to '-o'
-    is treated as the path of the file to write to. This script refuses to
-    overwrite existing files.
+    Writes the predictions for all workflows, tasks, nodes, and given
+    experiment numbers to a given file or stdout. If '-o' is not specified or
+    '-o -' is given the predictions are written to stdout. In any other case
+    the argument to '-o' is treated as the path of the file to write to. This
+    script refuses to overwrite existing files.
 
     Output format is as follows:
 
@@ -64,7 +64,7 @@ def results_csv(args):
         results["x"] = results["x"].apply(lambda x: int(x))
         results["y"] = results["y"].apply(lambda y: int(y))
         out += results.to_csv(sep=";", columns=["workflow", "task", "node", "x", "y"],
-                header=False, index=False)
+                              header=False, index=False)
     if args.output_file == "-":
         print(out)
         return
@@ -83,23 +83,25 @@ def results_csv(args):
 @analysis
 def workflow_node_error(args):
     """
-    Visualizes the distribution of relative absolute error over all traces nodes
-    and workflows.
+    Visualizes the distribution of relative absolute error over all traces
+    nodes and workflows.
 
     Creates one figure for each workflow. Each figure shows boxplots for each
     node and each boxplot shows the distribution of the relative absolute error
     over all the traces of the given workflow that ran on the given node.
     """
     results = run_experiment(
-            resource_x=args.resource_x,
-            resource_y=args.resource_y,
-            scale_bayesian_model=args.scale_bayesian_model,
-            scale_median_model=args.scale_median_model)
+        resource_x=args.resource_x,
+        resource_y=args.resource_y,
+        scale_bayesian_model=args.scale_bayesian_model,
+        scale_median_model=args.scale_median_model)
     workflows = results["workflow"].unique()
     nodes = results["node"].unique()
+
     def relative_absolute_error(x):
         return np.abs(x["y"] - x["yhat"]) / x["yhat"]
-    grouped = results.groupby(["workflow", "node"]).apply(relative_absolute_error) 
+    grouped = results.groupby(["workflow", "node"]).apply(
+        relative_absolute_error)
     plt.figure()
     num_rows = 2
     num_cols = 3
@@ -115,25 +117,27 @@ def workflow_node_error(args):
         plt.boxplot(data, labels=nodes)
     plt.show()
 
-@register(registered_scripts)
-@option("-w", "--workflow", default="eager")
-@option("--scale-bayesian-model",  type=toBool, default=True)
-@option("--scale-median-model", type=toBool, default=False)
-@option('-x', '--resource-x', default="TaskInputSizeUncompressed")
-@option('-y', '--resource-y', default="Realtime")
-@analysis
+
+@ register(registered_scripts)
+@ option("-w", "--workflow", default="eager")
+@ option("--scale-bayesian-model",  type=toBool, default=True)
+@ option("--scale-median-model", type=toBool, default=False)
+@ option('-x', '--resource-x', default="TaskInputSizeUncompressed")
+@ option('-y', '--resource-y', default="Realtime")
+@ analysis
 def node_task_error(args):
     """
     Creates a plot showing the average relative error for each task and node for
     the given workflow.
     """
     results = run_experiment(
-            resource_x=args.resource_x,
-            resource_y=args.resource_y,
-            scale_bayesian_model=args.scale_bayesian_model,
-            scale_median_model=args.scale_median_model,
-            workflows=[args.workflow])
+        resource_x=args.resource_x,
+        resource_y=args.resource_y,
+        scale_bayesian_model=args.scale_bayesian_model,
+        scale_median_model=args.scale_median_model,
+        workflows=[args.workflow])
     nodes = results["node"].unique()
+
     def average_relative_error(x):
         return np.mean(np.abs(x["y"] - x["yhat"]) / x["yhat"])
     grouped = results.groupby(["node", "task"]).apply(average_relative_error)
@@ -145,9 +149,9 @@ def node_task_error(args):
     plt.show()
 
 
-@register(registered_scripts)
-@option("--scale", choices=["log", "linear"], default="log")
-@analysis
+@ register(registered_scripts)
+@ option("--scale", choices=["log", "linear"], default="log")
+@ analysis
 def scale_median_model(args):
     '''
     Answers the question if lotaru should scale the outputs of its median models.
@@ -156,19 +160,21 @@ def scale_median_model(args):
     '''
     results_scaled = run_experiment(scale_median_model=True)
     results_unscaled = run_experiment(scale_median_model=False)
+
     def get_errors(df):
         return df[df["model"] == MedianModel].apply(lambda row: np.abs(row["y"] - row["yhat"]) / row["yhat"], axis=1)
     errors_scaled = get_errors(results_scaled)
     errors_unscaled = get_errors(results_unscaled)
     plt.yscale(args.scale)
-    plt.boxplot([list(errors_scaled), list(errors_unscaled)], labels=["scaled", "unscaled"])
+    plt.boxplot([list(errors_scaled), list(errors_unscaled)],
+                labels=["scaled", "unscaled"])
     plt.show()
 
 
-@register(registered_scripts)
-@option("-w", "--workflow", default="eager")
-@option("-e", "--experiment-number", default="1")
-@analysis
+@ register(registered_scripts)
+@ option("-w", "--workflow", default="eager")
+@ option("-e", "--experiment-number", default="1")
+@ analysis
 def training_traces(args):
     '''
     Let x be the number of instances of a given task during one workflow execution.
@@ -182,11 +188,14 @@ def training_traces(args):
     trace_reader = TraceReader(os.path.join("data", "traces"))
     all_data = trace_reader.get_trace(args.workflow.lower(), "local")
     if args.experiment_number == "0":
-        all_training_data = all_data[all_data["Label"].apply(lambda s: s[:6] == "train-")]
+        all_training_data = all_data[all_data["Label"].apply(
+            lambda s: s[:6] == "train-")]
     else:
-        all_training_data = all_data[all_data["Label"] == ("train-" + args.experiment_number)]
-    results = all_training_data.groupby(["Workflow", "WorkflowInputSize", "Task"]).count()
+        all_training_data = all_data[all_data["Label"] == (
+            "train-" + args.experiment_number)]
+    results = all_training_data.groupby(
+        ["Workflow", "WorkflowInputSize", "Task"]).count()
     results.drop(labels=results.columns[1:], axis=1, inplace=True)
     results.columns = ["count"]
-    print("unique number of traces per workflow workflow input size and task: ", results["count"].unique())
-
+    print("unique number of traces per workflow workflow input size and task: ",
+          results["count"].unique())

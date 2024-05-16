@@ -21,7 +21,8 @@ class LotaruInstance:
         self.scale_median_model = scale_median_model
         self.tasks = self.training_data.keys()
         if scale_bayesian_model or scale_median_model:
-            self.node_factor_map = get_node_factor_map(os.path.join("data", "benchmarks"))
+            self.node_factor_map = get_node_factor_map(
+                os.path.join("data", "benchmarks"))
         self.task_model_map = {}
 
     def train_models(self):

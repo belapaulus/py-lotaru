@@ -1,10 +1,5 @@
 import os
-import sys
-import argparse
-
-import matplotlib.pyplot as plt
 import pandas as pd
-import numpy as np
 
 from lotaru.LotaruInstance import LotaruInstance
 from lotaru.TraceReader import TraceReader
@@ -24,12 +19,14 @@ def run_experiment(
     workflow_lotaru_instance_map = {}
     for workflow in workflows:
         training_data = trace_reader.get_training_data(workflow, experiment_number,
-                resource_x, resource_y)
-        li = LotaruInstance(training_data, scale_bayesian_model, scale_median_model)
+                                                       resource_x, resource_y)
+        li = LotaruInstance(
+            training_data, scale_bayesian_model, scale_median_model)
         li.train_models()
         workflow_lotaru_instance_map[workflow] = li
 
-    results = pd.DataFrame(columns=["workflow", "task", "node", "model", "x", "yhat", "y"])
+    results = pd.DataFrame(
+        columns=["workflow", "task", "node", "model", "x", "yhat", "y"])
     # print predictions for all workflows, tasks and nodes
     for workflow in workflows:
         lotaru_instance = workflow_lotaru_instance_map[workflow]
@@ -39,9 +36,10 @@ def run_experiment(
                 test_data = trace_reader.get_test_data(workflow, task, node)
                 x = test_data[resource_x].to_numpy()
                 yhat = test_data[resource_y].to_numpy()
-                y = lotaru_instance.get_prediction(task, node, x.reshape(-1, 1))
+                y = lotaru_instance.get_prediction(
+                    task, node, x.reshape(-1, 1))
                 for i in range(x.size):
-                    results.loc[results.index.size] = [workflow, task, node, model_type, x[i], yhat[i], y[i]]
+                    results.loc[results.index.size] = [
+                        workflow, task, node, model_type, x[i], yhat[i], y[i]]
 
     return results
-

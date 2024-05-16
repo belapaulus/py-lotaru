@@ -6,7 +6,6 @@ cpu and io and using cpu and io to predict task runtimes
 """
 
 import os
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -22,6 +21,7 @@ resource_x = "TaskInputSizeUncompressed"
 trace_reader = TraceReader(os.path.join("data", "traces"))
 training_data = trace_reader.get_training_data(workflow, experiment_number)
 tasks = training_data["Task"].unique()
+
 
 def get_training_data(task, cpuLotaru, ioLotaru):
     """
@@ -46,25 +46,27 @@ def get_training_data(task, cpuLotaru, ioLotaru):
 def get_prucio_predictions():
 
     # train models
-    cpuLotaru = LotaruInstance(workflow, experiment_number, resource_x, "%cpu", trace_reader, False, False)
+    cpuLotaru = LotaruInstance(workflow, experiment_number, resource_x,
+                               "%cpu", trace_reader, False, False)
     cpuLotaru.train_models()
 
-    ioLotaru = LotaruInstance(workflow, experiment_number, resource_x, "rchar", trace_reader, False, False)
+    ioLotaru = LotaruInstance(workflow, experiment_number, resource_x,
+                              "rchar", trace_reader, False, False)
     ioLotaru.train_models()
 
     task_model_map = {}
     for task in tasks:
         x, y = get_training_data(task, None, None)
-        pearson = np.corrcoef(x.transpose(), y)
-        p1 = pearson[-1, 0]
-        p2 = pearson[-1, 1]
+        # pearson = np.corrcoef(x.transpose(), y)
+        # p1 = pearson[-1, 0]
+        # p2 = pearson[-1, 1]
         model = BayesianRidge()
         model.fit(x, y)
         task_model_map[task] = model
 
-
     # predict
-    results = pd.DataFrame(columns=["workflow", "task", "node", "x", "yhat", "y"])
+    results = pd.DataFrame(
+        columns=["workflow", "task", "node", "x", "yhat", "y"])
     for task in tasks:
         for node in nodes:
             test_data = trace_reader.get_test_data(workflow, task, node)
@@ -72,14 +74,21 @@ def get_prucio_predictions():
             yhat = test_data["Realtime"].to_numpy()
             x1 = cpuLotaru.get_prediction(task, node, x.reshape(-1, 1))
             x2 = ioLotaru.get_prediction(task, node, x.reshape(-1, 1))
-            y = task_model_map[task].predict(np.array(list(zip(x1, x2))).reshape(-1, 2))
+            y = task_model_map[task].predict(
+                np.array(list(zip(x1, x2))).reshape(-1, 2))
             for i in range(x.size):
-                results.loc[results.index.size] = [workflow, task, node, x[i], yhat[i], y[i]]
+                results.loc[results.index.size] = [
+                    workflow, task, node, x[i], yhat[i], y[i]]
 
     return results
 
+
 results = get_prucio_predictions()
+
+
 def median_error(row):
     return np.median(np.abs(row["y"] - row["yhat"]) / row["yhat"])
+
+
 median_errors = results.groupby("node").apply(median_error)
 print(median_errors)
