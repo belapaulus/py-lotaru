@@ -76,6 +76,7 @@ def results_csv(args):
 
 
 @register(registered_scripts)
+@option('-s', '--save')
 @option("--scale-bayesian-model",  type=toBool, default=True)
 @option("--scale-median-model", type=toBool, default=False)
 @option('-x', '--resource-x', default="TaskInputSizeUncompressed")
@@ -97,25 +98,32 @@ def workflow_node_error(args):
         scale_median_model=args.scale_median_model)
     workflows = results["workflow"].unique()
     nodes = results["node"].unique()
-
-    def relative_absolute_error(x):
-        return np.abs(x["y"] - x["yhat"]) / x["yhat"]
-    grouped = results.groupby(["workflow", "node"]).apply(
-        relative_absolute_error)
-    plt.figure()
-    num_rows = 2
-    num_cols = 3
-    plt.subplot(num_rows, num_cols, 1)
-    for i in range(len(workflows)):
-        workflow = workflows[i]
-        plt.subplot(num_rows, num_cols, i+1)
-        plt.yscale("log")
-        plt.title(workflow)
-        data = []
+    # add column with relative absolute error
+    results["rae"] = results.apply(
+        lambda row: np.abs(row["y"] - row["yhat"]) / row["yhat"], axis=1)
+    # transform into data structure that can be plotted
+    data = {}
+    for workflow in workflows:
+        data[workflow] = []
         for node in nodes:
-            data.append(grouped[(workflow, node)].to_numpy())
-        plt.boxplot(data, labels=nodes)
-    plt.show()
+            data[workflow].append(
+                results.loc[(results["workflow"] == workflow) & (results["node"] == node), "rae"])
+
+    fig, axs = plt.subplots(1, 5, figsize=(25, 5), sharey=True)
+    axs = axs.flatten()
+    for i in range(len(workflows)):
+        axs[i].set_title(workflows[i])
+        axs[i].boxplot(data[workflows[i]])
+        axs[i].set_xticklabels(nodes, rotation=-45, ha='left')
+    axs[0].set_yscale("log")
+    axs[0].set_ylim(bottom=results.loc[results["rae"] > 0, "rae"].min())
+    axs[0].set_ylabel("relative absolute prediction error")
+    axs[2].set_xlabel("nodes")
+    fig.tight_layout()
+    if args.save != "":
+        plt.savefig(args.save)
+    else:
+        plt.show()
 
 
 @ register(registered_scripts)
