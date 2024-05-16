@@ -1,10 +1,17 @@
 import os
 import pandas as pd
 
+from joblib import Memory
+
 from lotaru.LotaruInstance import LotaruInstance
 from lotaru.TraceReader import TraceReader
 
 # runs an experiment, returns results as pandas dataframe
+
+memory = Memory(".cache")
+
+
+@memory.cache
 def run_experiment(
         workflows=["eager", "methylseq", "chipseq", "atacseq", "bacass"],
         nodes=["asok01", "asok02", "n1", "n2", "c2", "local"],
