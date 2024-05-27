@@ -157,6 +157,7 @@ def workflow_node_error(args):
 @option("-w", "--workflow", default="eager")
 @option("--scale-bayesian-model",  type=toBool, default=True)
 @option("--scale-median-model", type=toBool, default=False)
+@option("-e", "--experiment-number", default="1")
 @option('-x', '--resource-x', default="TaskInputSizeUncompressed")
 @option('-y', '--resource-y', default="Realtime")
 @analysis
@@ -170,6 +171,7 @@ def node_task_error(args):
         resource_y=args.resource_y,
         scale_bayesian_model=args.scale_bayesian_model,
         scale_median_model=args.scale_median_model,
+        experiment_number=args.experiment_number,
         workflows=[args.workflow])
     nodes = results["node"].unique()
 
