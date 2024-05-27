@@ -41,6 +41,10 @@ def node_error(args):
 
 @register(registered_scripts)
 @option('-e', '--experiment-number', nargs='+', default=['1', '2'])
+@option("--scale-bayesian-model",  type=toBool, default=True)
+@option("--scale-median-model", type=toBool, default=False)
+@option('-x', '--resource-x', default="TaskInputSizeUncompressed")
+@option('-y', '--resource-y', default="Realtime")
 @option('-o', '--output-file', default='-')
 @analysis
 def results_csv(args):
@@ -53,18 +57,40 @@ def results_csv(args):
 
     Output format is as follows:
 
-    workflow;task;node;x;y
+    workflow;task;node;x;y;yhat;rae
+
+    examples:
+
+        results_csv -e 1 uses training data from experiment one and prints all
+        predictions to stdout
+
+        results_csv -e 0 -o out.csv uses training data from experiment one and
+        two and write predictions to out.csv
+
+        results_csv -e 1 -e 2 uses training data from experiment one and prints
+        all predictions to stdout and then uses training data from experiment
+        two and prints predictions to stdout
     """
     out = ""
     for i in args.experiment_number:
-        results = run_experiment(experiment_number=str(i))
+        results = run_experiment(
+            resource_x=args.resource_x,
+            resource_y=args.resource_y,
+            scale_bayesian_model=args.scale_bayesian_model,
+            scale_median_model=args.scale_median_model,
+            experiment_number=i)
         results["workflow"] = results["workflow"].apply(lambda s: s.lower())
         results["task"] = results["task"].apply(lambda s: s.lower())
         results["node"] = results["node"].apply(lambda s: s.lower())
-        results["x"] = results["x"].apply(lambda x: int(x))
-        results["y"] = results["y"].apply(lambda y: int(y))
-        out += results.to_csv(sep=";", columns=["workflow", "task", "node", "x", "y"],
-                              header=False, index=False)
+        results["rae"] = results.apply(
+            lambda row: np.abs(row["y"] - row["yhat"]) / row["yhat"], axis=1)
+        # TODO proper decimals with
+        # Decimal('7.325').quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
+        # .apply(lambda x: int(x))
+        out += results.to_csv(sep=";",
+                              columns=["workflow", "task", "node",
+                                       "x", "y", "yhat", "rae"],
+                              header=True, index=False)
     if args.output_file == "-":
         print(out)
         return
