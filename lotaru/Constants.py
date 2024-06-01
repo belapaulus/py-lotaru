@@ -28,4 +28,4 @@ NODES = ["asok01", "asok02", "n1", "n2", "c2", "local"]
 TRACE_DIR = path.join("data", "traces")
 BENCH_DIR = path.join("data", "benchmarks")
 LOTARU_G_BENCH = path.join(BENCH_DIR, "lotaru-g.csv")
-LOTARU_A_BENCH_DIR = path.join(BENCH_DIR, "lotaru-a")
+LOTARU_A_BENCH = path.join(BENCH_DIR, "lotaru-a.csv")

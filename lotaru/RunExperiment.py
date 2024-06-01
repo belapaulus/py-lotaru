@@ -1,10 +1,10 @@
-import os
 import pandas as pd
 
 from joblib import Memory
 
 from lotaru.LotaruInstance import LotaruInstance
 from lotaru.TraceReader import TraceReader
+from lotaru.Constants import WORKFLOWS, NODES
 
 # runs an experiment, returns results as pandas dataframe
 
@@ -13,14 +13,14 @@ memory = Memory(".cache")
 
 @memory.cache
 def run_experiment(
-        workflows=["eager", "methylseq", "chipseq", "atacseq", "bacass"],
-        nodes=["asok01", "asok02", "n1", "n2", "c2", "local"],
+        workflows=WORKFLOWS,
+        nodes=NODES,
         experiment_number="0",
         resource_x="TaskInputSizeUncompressed",
         resource_y="Realtime",
         scale_bayesian_model=True,
         scale_median_model=False):
-    trace_reader = TraceReader(os.path.join("data", "traces"))
+    trace_reader = TraceReader()
 
     # create one lotaru instance per workflow
     workflow_lotaru_instance_map = {}

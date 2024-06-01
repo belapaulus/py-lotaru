@@ -1,9 +1,8 @@
-import os
-
 import numpy as np
 from sklearn.linear_model import BayesianRidge
 
-from lotaru.NodeFactor import get_node_factor_map
+from lotaru.Scaler import Scaler
+from lotaru.Constants import LOTARU_G_BENCH
 
 
 class MedianModel:
@@ -20,9 +19,7 @@ class LotaruInstance:
         self.scale_bayesian_model = scale_bayesian_model
         self.scale_median_model = scale_median_model
         self.tasks = self.training_data.keys()
-        if scale_bayesian_model or scale_median_model:
-            self.node_factor_map = get_node_factor_map(
-                os.path.join("data", "benchmarks"))
+        self.scaler = Scaler("g", LOTARU_G_BENCH)
         self.task_model_map = {}
 
     def train_models(self):
@@ -41,7 +38,7 @@ class LotaruInstance:
         model = self.task_model_map[task]
         if (self.scale_bayesian_model and type(model) is BayesianRidge) or (
                 self.scale_median_model and type(model) is MedianModel):
-            factor = self.node_factor_map[node]
+            factor = self.scaler.get_factor(node, task)
         else:
             factor = 1
         return model.predict(x.reshape(-1, 1)) * factor

@@ -1,9 +1,11 @@
 import os
 import pandas as pd
 
+from lotaru.Constants import TRACE_DIR
+
 
 class TraceReader:
-    def __init__(self, trace_dir):
+    def __init__(self, trace_dir=TRACE_DIR):
         self.trace_dir = trace_dir
         # maps from (wf + node) to trace dataframe
         # wf + node might be ambiguous
