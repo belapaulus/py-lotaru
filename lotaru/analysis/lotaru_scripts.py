@@ -8,6 +8,7 @@ from lotaru.analysis.analysis_script import register, option, analysis, toBool
 from lotaru.TraceReader import TraceReader
 from lotaru.LotaruInstance import MedianModel
 from lotaru.RunExperiment import run_experiment
+from lotaru.Constants import LOTARU_A_BENCH, LOTARU_G_BENCH
 
 registered_scripts = []
 
@@ -43,6 +44,7 @@ def node_error(args):
 @option('-e', '--experiment-number', nargs='+', default=['1', '2'])
 @option("--scale-bayesian-model",  type=toBool, default=True)
 @option("--scale-median-model", type=toBool, default=False)
+@option('-s', '--scaler', choices=['a', 'g'], default='g')
 @option('-x', '--resource-x', default="TaskInputSizeUncompressed")
 @option('-y', '--resource-y', default="Realtime")
 @option('-o', '--output-file', default='-')
@@ -72,10 +74,16 @@ def results_csv(args):
         two and prints predictions to stdout
     """
     out = ""
+    scaler_bench_file = {
+        'a': LOTARU_A_BENCH,
+        'b': LOTARU_G_BENCH,
+    }
     for i in args.experiment_number:
         results = run_experiment(
             resource_x=args.resource_x,
             resource_y=args.resource_y,
+            scaler_type=args.scaler,
+            scaler_bench_file=scaler_bench_file[args.scaler],
             scale_bayesian_model=args.scale_bayesian_model,
             scale_median_model=args.scale_median_model,
             experiment_number=i)
