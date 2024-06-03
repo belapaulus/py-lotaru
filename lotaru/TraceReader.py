@@ -19,23 +19,7 @@ class TraceReader:
                 "Label": "string",
                 "Machine": "string",
                 "Workflow": "string",
-                # "NumberSequences"
                 "Task": "string",
-                # "WorkflowInputSize"
-                # "Realtime"
-                # "%cpu"
-                # "rss"
-                # "rchar"
-                # "wchar"
-                # "cpus"
-                # "read_bytes"
-                # "write_bytes"
-                # "vmem"
-                # "memory"
-                # "peak_rss"
-                # "TaskInputSize"
-                # "TaskInputSizeUncompressed"
-                # "WorkflowInputUncompressed"
             }
             self.wf_node_trace_map[workflow +
                                    node] = pd.read_csv(str(path), dtype=dtypes)
@@ -54,7 +38,6 @@ class TraceReader:
         training_data.reset_index().drop("index", axis=1)
         return training_data
 
-    # use experiment_number = "0" to return all training data
     def get_training_data(self, workflow, experiment_number, resource_x,
                           resource_y):
         '''
@@ -79,12 +62,12 @@ class TraceReader:
             task_training_data = pd.DataFrame(
                 columns=["x", "y"], dtype="int64")
             if experiment_number in ["0", "1"]:
-                df = self._get_task_training_data(local_traces, task, "train-1",
-                                                  resource_x, resource_y)
+                df = self._get_task_training_data(
+                    local_traces, task, "train-1", resource_x, resource_y)
                 task_training_data = pd.concat([task_training_data, df])
             if experiment_number in ["0", "2"]:
-                df = self._get_task_training_data(local_traces, task, "train-2",
-                                                  resource_x, resource_y)
+                df = self._get_task_training_data(
+                    local_traces, task, "train-2", resource_x, resource_y)
                 task_training_data = pd.concat([task_training_data, df])
             training_data[task] = task_training_data.reset_index().drop(
                 "index", axis=1)

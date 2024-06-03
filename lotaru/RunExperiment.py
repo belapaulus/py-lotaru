@@ -4,31 +4,28 @@ from joblib import Memory
 
 from lotaru.LotaruInstance import LotaruInstance
 from lotaru.TraceReader import TraceReader
-from lotaru.Constants import WORKFLOWS, NODES
-
-# runs an experiment, returns results as pandas dataframe
+from lotaru.Constants import WORKFLOWS, NODES, LOTARU_G_BENCH
 
 memory = Memory(".cache")
 
 
 @memory.cache
-def run_experiment(
-        workflows=WORKFLOWS,
-        nodes=NODES,
-        experiment_number="0",
-        resource_x="TaskInputSizeUncompressed",
-        resource_y="Realtime",
-        scale_bayesian_model=True,
-        scale_median_model=False):
+def run_experiment(workflows=WORKFLOWS, nodes=NODES, experiment_number="0",
+                   resource_x="TaskInputSizeUncompressed",
+                   resource_y="Realtime", scaler_type="g",
+                   scaler_bench_file=LOTARU_G_BENCH, scale_bayesian_model=True,
+                   scale_median_model=False):
     trace_reader = TraceReader()
 
     # create one lotaru instance per workflow
     workflow_lotaru_instance_map = {}
     for workflow in workflows:
-        training_data = trace_reader.get_training_data(workflow, experiment_number,
-                                                       resource_x, resource_y)
-        li = LotaruInstance(
-            training_data, scale_bayesian_model, scale_median_model)
+        training_data = trace_reader.get_training_data(
+            workflow, experiment_number, resource_x, resource_y)
+        li = LotaruInstance(training_data, scaler_type=scaler_type,
+                            scaler_bench_file=scaler_bench_file,
+                            scale_bayesian_model=scale_bayesian_model,
+                            scale_median_model=scale_median_model)
         li.train_models()
         workflow_lotaru_instance_map[workflow] = li
 
@@ -37,7 +34,7 @@ def run_experiment(
     # print predictions for all workflows, tasks and nodes
     for workflow in workflows:
         lotaru_instance = workflow_lotaru_instance_map[workflow]
-        for task in lotaru_instance.get_tasks():
+        for task in lotaru_instance.tasks:
             model_type = type(lotaru_instance.get_model_for_task(task))
             for node in nodes:
                 test_data = trace_reader.get_test_data(workflow, task, node)

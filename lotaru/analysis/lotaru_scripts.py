@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-from lotaru.analysis.analysis_script import AnalysisScript, register, option, analysis, toBool
+from lotaru.analysis.analysis_script import register, option, analysis, toBool
 from lotaru.TraceReader import TraceReader
 from lotaru.LotaruInstance import MedianModel
 from lotaru.RunExperiment import run_experiment
@@ -133,7 +133,8 @@ def workflow_node_error(args):
         data[workflow] = []
         for node in nodes:
             data[workflow].append(
-                results.loc[(results["workflow"] == workflow) & (results["node"] == node), "rae"])
+                results.loc[(results["workflow"] == workflow) &
+                            (results["node"] == node), "rae"])
 
     fig, axs = plt.subplots(1, 5, figsize=(25, 5), sharey=True)
     axs = axs.flatten()
@@ -163,8 +164,8 @@ def workflow_node_error(args):
 @analysis
 def node_task_error(args):
     """
-    Creates a plot showing the average relative error for each task and node for
-    the given workflow.
+    Creates a plot showing the average relative error for each task and node
+    for the given workflow.
     """
     results = run_experiment(
         resource_x=args.resource_x,
@@ -195,21 +196,23 @@ def node_task_error(args):
         plt.show()
 
 
-@ register(registered_scripts)
-@ option("--scale", choices=["log", "linear"], default="log")
+@register(registered_scripts)
+@option("--scale", choices=["log", "linear"], default="log")
 @option('-s', '--save', default="")
-@ analysis
+@analysis
 def scale_median_model(args):
     '''
-    Answers the question if lotaru should scale the outputs of its median models.
-    Shows the distribution of errors of predictions made with scaled median models
-    and unscaled median models.
+    Answers the question if lotaru should scale the outputs of its median
+    models. Shows the distribution of errors of predictions made with scaled
+    median models and unscaled median models.
     '''
     results_scaled = run_experiment(scale_median_model=True)
     results_unscaled = run_experiment(scale_median_model=False)
 
     def get_errors(df):
-        return df[df["model"] == MedianModel].apply(lambda row: np.abs(row["y"] - row["yhat"]) / row["yhat"], axis=1)
+        return df[df["model"] == MedianModel].apply(
+            lambda row: np.abs(row["y"] - row["yhat"]) / row["yhat"],
+            axis=1)
     errors_scaled = get_errors(results_scaled)
     errors_unscaled = get_errors(results_unscaled)
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
@@ -226,19 +229,19 @@ def scale_median_model(args):
         plt.show()
 
 
-@ register(registered_scripts)
-@ option("-w", "--workflow", default="eager")
-@ option("-e", "--experiment-number", default="1")
-@ analysis
+@register(registered_scripts)
+@option("-w", "--workflow", default="eager")
+@option("-e", "--experiment-number", default="1")
+@analysis
 def training_traces(args):
     '''
-    Let x be the number of instances of a given task during one workflow execution.
-    This script prints the unique values of x for all tasks and workflow executions
-    in our traces.
+    Let x be the number of instances of a given task during one workflow
+    execution. This script prints the unique values of x for all tasks and
+    workflow executions in our traces.
 
-    For example if x is [1] that means that during all workflow exections each task
-    had only one instance. If x is [1, 2] that means some tasks during some workflow
-    executions had two instances while the others only had one.
+    For example if x is [1] that means that during all workflow exections each
+    task had only one instance. If x is [1, 2] that means some tasks during
+    some workflow executions had two instances while the others only had one.
     '''
     trace_reader = TraceReader(os.path.join("data", "traces"))
     all_data = trace_reader.get_trace(args.workflow.lower(), "local")

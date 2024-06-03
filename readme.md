@@ -23,11 +23,3 @@ scripts are in `lotaru/analysis`
 For now the cli application can be called via `python -m lotaru` which
 prints a general help to get started.
 
-## To-dos
-
- - document how to add scripts
- - add titles, descriptions, legends to figures
- - add tests
- - try to improve prucio results (feature importance)
- - implement the predictors used as baselines in the papers
- - refactor prediction code that it can be used as a stand-alone program?

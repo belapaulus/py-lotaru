@@ -14,12 +14,16 @@ class MedianModel:
 
 
 class LotaruInstance:
-    def __init__(self, training_data, scale_bayesian_model, scale_median_model):
+    def __init__(self, training_data, scaler_type="g",
+                 scaler_bench_file=LOTARU_G_BENCH, scale_bayesian_model=True,
+                 scale_median_model=False):
         self.training_data = training_data
-        self.scale_bayesian_model = scale_bayesian_model
-        self.scale_median_model = scale_median_model
         self.tasks = self.training_data.keys()
-        self.scaler = Scaler("g", LOTARU_G_BENCH)
+        self.scale_model = {
+            BayesianRidge: scale_bayesian_model,
+            MedianModel: scale_median_model,
+        }
+        self.scaler = Scaler(scaler_type, scaler_bench_file)
         self.task_model_map = {}
 
     def train_models(self):
@@ -36,15 +40,11 @@ class LotaruInstance:
 
     def get_prediction(self, task, node, x):
         model = self.task_model_map[task]
-        if (self.scale_bayesian_model and type(model) is BayesianRidge) or (
-                self.scale_median_model and type(model) is MedianModel):
+        if self.scale_model[type(model)]:
             factor = self.scaler.get_factor(node, task)
         else:
             factor = 1
         return model.predict(x.reshape(-1, 1)) * factor
-
-    def get_tasks(self):
-        return self.tasks
 
     def get_model_for_task(self, task):
         return self.task_model_map[task]

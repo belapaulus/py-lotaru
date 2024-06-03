@@ -2,8 +2,9 @@ import os
 
 import matplotlib.pyplot as plt
 
-from lotaru.analysis.analysis_script import AnalysisScript, register, option, analysis, toBool
+from lotaru.analysis.analysis_script import register, option, analysis
 from lotaru.TraceReader import TraceReader
+from lotaru.Constants import NODES, WORKFLOWS
 
 registered_scripts = []
 
@@ -19,9 +20,7 @@ def show_correlation(args):
     workflow. Creates on scatter plot per task.
     '''
     tr = TraceReader(os.path.join("data", "traces"))
-    # workflows=["eager", "methylseq", "chipseq", "atacseq", "bacass"],
-    nodes = ["asok01", "asok02", "n1", "n2", "c2", "local"]
-    tasks = tr.get_training_data(args.workflow, "0")["Task"].unique()
+    tasks = WORKFLOWS[args.workflow]
     assert (len(tasks) <= 16)
 
     plt.figure()
@@ -31,7 +30,7 @@ def show_correlation(args):
         task = tasks[i]
         plt.subplot(num_rows, num_cols, i+1)
         plt.title(task)
-        for node in nodes:
+        for node in NODES:
             data = tr.get_task_data(args.workflow, task, node)
             plt.scatter(data[args.x], data[args.y])
     plt.show()
