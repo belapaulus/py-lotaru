@@ -16,10 +16,10 @@ class TraceReader:
         if (workflow + node) not in self.wf_node_trace_map:
             path = os.path.join(self.trace_dir, node, workflow, "trace.csv")
             dtypes = {
-                "Label": "string",
-                "Machine": "string",
-                "Workflow": "string",
-                "Task": "string",
+                "label": "string",
+                "machine": "string",
+                "workflow": "string",
+                "task": "string",
             }
             self.wf_node_trace_map[workflow +
                                    node] = pd.read_csv(str(path), dtype=dtypes)
@@ -27,12 +27,12 @@ class TraceReader:
 
     def get_task_data(self, workflow, task, node):
         all_data = self.get_trace(workflow, node)
-        return all_data[all_data["Task"] == task]
+        return all_data[all_data["task"] == task]
 
     def _get_task_training_data(self, local_traces, task, label, resource_x,
                                 resource_y):
-        task_traces = local_traces[local_traces["Task"] == task]
-        training_traces = task_traces[task_traces["Label"] == label][:6]
+        task_traces = local_traces[local_traces["task"] == task]
+        training_traces = task_traces[task_traces["label"] == label][:6]
         training_data = training_traces[[resource_x, resource_y]]
         training_data.columns = ["x", "y"]
         training_data.reset_index().drop("index", axis=1)
@@ -56,7 +56,7 @@ class TraceReader:
         '''
         assert (experiment_number in ["0", "1", "2"])
         local_traces = self.get_trace(workflow.lower(), "local")
-        tasks = local_traces["Task"].unique()
+        tasks = local_traces["task"].unique()
         training_data = {}
         for task in tasks:
             task_training_data = pd.DataFrame(
@@ -75,7 +75,7 @@ class TraceReader:
 
     def get_test_data(self, workflow, task, node):
         all_data = self.get_trace(workflow, node)
-        test_data = all_data[all_data["Label"] == "test"]
-        task_test_data = test_data[test_data["Task"].apply(
+        test_data = all_data[all_data["label"] == "test"]
+        task_test_data = test_data[test_data["task"].apply(
             lambda s: s == task)]
         return task_test_data

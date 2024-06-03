@@ -1,4 +1,4 @@
-Label,Machine,Workflow,NumberSequences,Task,WorkflowInputSize,Realtime,%cpu,rss,rchar,wchar,cpus,read_bytes,write_bytes,vmem,memory,peak_rss,TaskInputSize,TaskInputSizeUncompressed,WorkflowInputUncompressed
+label,machine,workflow,numbersequences,task,workflowinputsize,realtime,%cpu,rss,rchar,wchar,cpus,read_bytes,write_bytes,vmem,memory,peak_rss,taskinputsize,taskinputsizeuncompressed,workflowinputuncompressed
 train-1,asok02,eager,13154200,fastqc,885333729,140902,148.1,368402432,931634797,2049706,2,885649408,3645440,3091722240,4294967296,368402432,885333729,4165233066,4165233066
 train-1,asok02,eager,1644400,fastqc,111047111,28789,129.5,377176064,146773956,2036536,2,111190016,2781184,3091722240,4294967296,377176064,111047111,520689150,520689150
 train-1,asok02,eager,822200,fastqc,55489783,16585,140.9,343191552,80647308,2035568,2,55656448,2527232,3087507456,4294967296,343191552,55489783,260344382,260344382

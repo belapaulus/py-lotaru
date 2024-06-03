@@ -11,8 +11,8 @@ registered_scripts = []
 
 @register(registered_scripts)
 @option("-w", "--workflow", default="eager")
-@option("-x", default="TaskInputSizeUncompressed")
-@option("-y", default="Realtime")
+@option("-x", default="taskinputsizeuncompressed")
+@option("-y", default="realtime")
 @analysis
 def show_correlation(args):
     '''

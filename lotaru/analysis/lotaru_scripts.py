@@ -17,8 +17,8 @@ registered_scripts = []
 @option("-e", "--experiment_number", default="1")
 @option("--scale-bayesian-model",  type=toBool, default=True)
 @option("--scale-median-model", type=toBool, default=False)
-@option('-x', '--resource-x', default="TaskInputSizeUncompressed")
-@option('-y', '--resource-y', default="Realtime")
+@option('-x', '--resource-x', default="taskinputsizeuncompressed")
+@option('-y', '--resource-y', default="realtime")
 @analysis
 def node_error(args):
     """
@@ -45,8 +45,8 @@ def node_error(args):
 @option("--scale-bayesian-model",  type=toBool, default=True)
 @option("--scale-median-model", type=toBool, default=False)
 @option('-s', '--scaler', choices=['a', 'g'], default='g')
-@option('-x', '--resource-x', default="TaskInputSizeUncompressed")
-@option('-y', '--resource-y', default="Realtime")
+@option('-x', '--resource-x', default="taskinputsizeuncompressed")
+@option('-y', '--resource-y', default="realtime")
 @option('-o', '--output-file', default='-')
 @analysis
 def results_csv(args):
@@ -113,8 +113,8 @@ def results_csv(args):
 @option('-s', '--save', default="")
 @option("--scale-bayesian-model",  type=toBool, default=True)
 @option("--scale-median-model", type=toBool, default=False)
-@option('-x', '--resource-x', default="TaskInputSizeUncompressed")
-@option('-y', '--resource-y', default="Realtime")
+@option('-x', '--resource-x', default="taskinputsizeuncompressed")
+@option('-y', '--resource-y', default="realtime")
 @analysis
 def workflow_node_error(args):
     """
@@ -167,8 +167,8 @@ def workflow_node_error(args):
 @option("--scale-bayesian-model",  type=toBool, default=True)
 @option("--scale-median-model", type=toBool, default=False)
 @option("-e", "--experiment-number", default="1")
-@option('-x', '--resource-x', default="TaskInputSizeUncompressed")
-@option('-y', '--resource-y', default="Realtime")
+@option('-x', '--resource-x', default="taskinputsizeuncompressed")
+@option('-y', '--resource-y', default="realtime")
 @analysis
 def node_task_error(args):
     """
@@ -254,13 +254,13 @@ def training_traces(args):
     trace_reader = TraceReader(os.path.join("data", "traces"))
     all_data = trace_reader.get_trace(args.workflow.lower(), "local")
     if args.experiment_number == "0":
-        all_training_data = all_data[all_data["Label"].apply(
+        all_training_data = all_data[all_data["label"].apply(
             lambda s: s[:6] == "train-")]
     else:
-        all_training_data = all_data[all_data["Label"] == (
+        all_training_data = all_data[all_data["label"] == (
             "train-" + args.experiment_number)]
     results = all_training_data.groupby(
-        ["Workflow", "WorkflowInputSize", "Task"]).count()
+        ["workflow", "workflowinputsize", "task"]).count()
     results.drop(labels=results.columns[1:], axis=1, inplace=True)
     results.columns = ["count"]
     print("unique number of traces per workflow workflow input size and task: ",

@@ -15,7 +15,8 @@ class Scaler:
             return
         if scaler_type == "a":
             factors = self._get_lotaru_a_factors()
-            self.get_factor = lambda node, task: factors.loc[(node, task)]
+            self.get_factor = lambda node, task: factors.loc[(
+                node, task), "factor"]
             return
         # TODO error unknown scaler_type
 
@@ -64,3 +65,4 @@ class Scaler:
             fill = df.loc[node, "factor"].median()
             df.loc[node, "factor"] = df.loc[node, "factor"].fillna(fill).values
         df.loc["local", "factor"] = 1
+        return df

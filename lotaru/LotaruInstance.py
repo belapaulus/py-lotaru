@@ -1,9 +1,6 @@
 import numpy as np
 from sklearn.linear_model import BayesianRidge
 
-from lotaru.Scaler import Scaler
-from lotaru.Constants import LOTARU_G_BENCH
-
 
 class MedianModel:
     def __init__(self, median):
@@ -14,8 +11,7 @@ class MedianModel:
 
 
 class LotaruInstance:
-    def __init__(self, training_data, scaler_type="g",
-                 scaler_bench_file=LOTARU_G_BENCH, scale_bayesian_model=True,
+    def __init__(self, training_data, scaler, scale_bayesian_model=True,
                  scale_median_model=False):
         self.training_data = training_data
         self.tasks = self.training_data.keys()
@@ -23,7 +19,7 @@ class LotaruInstance:
             BayesianRidge: scale_bayesian_model,
             MedianModel: scale_median_model,
         }
-        self.scaler = Scaler(scaler_type, scaler_bench_file)
+        self.scaler = scaler
         self.task_model_map = {}
 
     def train_models(self):
