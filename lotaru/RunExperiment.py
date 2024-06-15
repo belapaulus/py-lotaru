@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 from joblib import Memory
 
@@ -31,20 +32,23 @@ def run_experiment(workflows=WORKFLOWS, nodes=NODES, experiment_number="0",
         workflow_lotaru_instance_map[workflow] = li
 
     results = pd.DataFrame(
-        columns=["workflow", "task", "node", "model", "x", "yhat", "y"])
+        columns=["workflow", "task", "node", "model", "x", "yhat", "y", "rae"])
     # print predictions for all workflows, tasks and nodes
+    # TODO proper decimals with
+    # Decimal('7.325').quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
+    # .apply(lambda x: int(x))
     for workflow in workflows:
-        lotaru_instance = workflow_lotaru_instance_map[workflow]
-        for task in lotaru_instance.tasks:
-            model_type = type(lotaru_instance.get_model_for_task(task))
+        for task in WORKFLOWS[workflow]:
             for node in nodes:
+                lotaru_instance = workflow_lotaru_instance_map[workflow]
+                model_type = type(lotaru_instance.get_model_for_task(task))
                 test_data = trace_reader.get_test_data(workflow, task, node)
-                x = test_data[resource_x].to_numpy()
+                x = test_data[resource_x].to_numpy().reshape(-1, 1)
                 yhat = test_data[resource_y].to_numpy()
-                y = lotaru_instance.get_prediction(
-                    task, node, x.reshape(-1, 1))
+                y = lotaru_instance.get_prediction(task, node, x)
+                rae = np.abs((y - yhat) / yhat)
                 for i in range(x.size):
                     results.loc[results.index.size] = [
-                        workflow, task, node, model_type, x[i], yhat[i], y[i]]
+                        workflow, task, node, model_type, x[i], yhat[i], y[i], rae[i]]
 
     return results

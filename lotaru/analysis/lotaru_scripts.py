@@ -4,52 +4,31 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
-from lotaru.analysis.analysis_script import register, option, analysis, toBool
+from lotaru.analysis.analysis_script import (
+    register, option, defaultanalysis, analysis)
 from lotaru.TraceReader import TraceReader
 from lotaru.LotaruInstance import MedianModel
 from lotaru.RunExperiment import run_experiment
-from lotaru.Constants import LOTARU_A_BENCH, LOTARU_G_BENCH
+from lotaru.Constants import WORKFLOWS, NODES
 
 registered_scripts = []
 
 
 @register(registered_scripts)
-@option("-e", "--experiment_number", default="1")
-@option("--scale-bayesian-model",  type=toBool, default=True)
-@option("--scale-median-model", type=toBool, default=False)
-@option('-x', '--resource-x', default="taskinputsizeuncompressed")
-@option('-y', '--resource-y', default="realtime")
-@analysis
-def node_error(args):
+@defaultanalysis
+def node_error(args, results):
     """
     Returns the median relative prediction error for each node, over all
     workflows and tasks.
     """
     print("node_error was called with: ", args)
-    results = run_experiment(
-        resource_x=args.resource_x,
-        resource_y=args.resource_y,
-        scale_bayesian_model=args.scale_bayesian_model,
-        scale_median_model=args.scale_median_model,
-        experiment_number=args.experiment_number)
-    # TODO row is misleading, this is a dataframe?
-
-    def median_error(row):
-        return np.median(np.abs(row["y"] - row["yhat"]) / row["yhat"])
-    median_errors = results.groupby("node").apply(median_error)
-    print(median_errors)
+    median_errors = results.groupby("node")["rae"].median()
+    print(median_errors.sort_index())
 
 
 @register(registered_scripts)
-@option('-e', '--experiment-number', nargs='+', default=['1', '2'])
-@option("--scale-bayesian-model",  type=toBool, default=True)
-@option("--scale-median-model", type=toBool, default=False)
-@option('-s', '--scaler', choices=['a', 'g'], default='g')
-@option('-x', '--resource-x', default="taskinputsizeuncompressed")
-@option('-y', '--resource-y', default="realtime")
-@option('-o', '--output-file', default='-')
-@analysis
-def results_csv(args):
+@defaultanalysis
+def results_csv(args, results):
     """
     Writes the predictions for all workflows, tasks, nodes, and given
     experiment numbers to a given file or stdout. If '-o' is not specified or
@@ -61,44 +40,11 @@ def results_csv(args):
 
     workflow;task;node;x;y;yhat;rae
 
-    examples:
-
-        results_csv -e 1 uses training data from experiment one and prints all
-        predictions to stdout
-
-        results_csv -e 0 -o out.csv uses training data from experiment one and
-        two and write predictions to out.csv
-
-        results_csv -e 1 -e 2 uses training data from experiment one and prints
-        all predictions to stdout and then uses training data from experiment
-        two and prints predictions to stdout
     """
-    out = ""
-    scaler_bench_file = {
-        'a': LOTARU_A_BENCH,
-        'b': LOTARU_G_BENCH,
-    }
-    for i in args.experiment_number:
-        results = run_experiment(
-            resource_x=args.resource_x,
-            resource_y=args.resource_y,
-            scaler_type=args.scaler,
-            scaler_bench_file=scaler_bench_file[args.scaler],
-            scale_bayesian_model=args.scale_bayesian_model,
-            scale_median_model=args.scale_median_model,
-            experiment_number=i)
-        results["workflow"] = results["workflow"].apply(lambda s: s.lower())
-        results["task"] = results["task"].apply(lambda s: s.lower())
-        results["node"] = results["node"].apply(lambda s: s.lower())
-        results["rae"] = results.apply(
-            lambda row: np.abs(row["y"] - row["yhat"]) / row["yhat"], axis=1)
-        # TODO proper decimals with
-        # Decimal('7.325').quantize(Decimal('.01'), rounding=ROUND_HALF_UP)
-        # .apply(lambda x: int(x))
-        out += results.to_csv(sep=";",
-                              columns=["workflow", "task", "node",
-                                       "x", "y", "yhat", "rae"],
-                              header=True, index=False)
+    out = results.to_csv(sep=";",
+                         columns=["workflow", "task", "node",
+                                  "x", "y", "yhat", "rae"],
+                         header=True, index=False)
     if args.output_file == "-":
         print(out)
         return
@@ -111,12 +57,8 @@ def results_csv(args):
 
 @register(registered_scripts)
 @option('-s', '--save', default="")
-@option("--scale-bayesian-model",  type=toBool, default=True)
-@option("--scale-median-model", type=toBool, default=False)
-@option('-x', '--resource-x', default="taskinputsizeuncompressed")
-@option('-y', '--resource-y', default="realtime")
-@analysis
-def workflow_node_error(args):
+@defaultanalysis
+def workflow_node_error(args, results):
     """
     Visualizes the distribution of relative absolute error over all traces
     nodes and workflows.
@@ -125,31 +67,21 @@ def workflow_node_error(args):
     node and each boxplot shows the distribution of the relative absolute error
     over all the traces of the given workflow that ran on the given node.
     """
-    results = run_experiment(
-        resource_x=args.resource_x,
-        resource_y=args.resource_y,
-        scale_bayesian_model=args.scale_bayesian_model,
-        scale_median_model=args.scale_median_model)
-    workflows = results["workflow"].unique()
-    nodes = results["node"].unique()
-    # add column with relative absolute error
-    results["rae"] = results.apply(
-        lambda row: np.abs(row["y"] - row["yhat"]) / row["yhat"], axis=1)
     # transform into data structure that can be plotted
     data = {}
-    for workflow in workflows:
+    for workflow in WORKFLOWS:
         data[workflow] = []
-        for node in nodes:
+        for node in NODES:
             data[workflow].append(
                 results.loc[(results["workflow"] == workflow) &
                             (results["node"] == node), "rae"])
 
     fig, axs = plt.subplots(1, 5, figsize=(25, 5), sharey=True)
     axs = axs.flatten()
-    for i in range(len(workflows)):
-        axs[i].set_title(workflows[i])
-        axs[i].boxplot(data[workflows[i]])
-        axs[i].set_xticklabels(nodes, rotation=-45, ha='left')
+    for i in range(len(WORKFLOWS)):
+        axs[i].set_title(WORKFLOWS.keys[i])
+        axs[i].boxplot(data[WORKFLOWS.keys[i]])
+        axs[i].set_xticklabels(NODES, rotation=-45, ha='left')
     axs[0].set_yscale("log")
     axs[0].set_ylim(bottom=results.loc[results["rae"] > 0, "rae"].min())
     axs[0].set_ylabel("relative absolute prediction error")
@@ -162,33 +94,19 @@ def workflow_node_error(args):
 
 
 @register(registered_scripts)
-@option('-s', '--save', default="")
+@option('--save', default="")
 @option("-w", "--workflow", default="eager")
-@option("--scale-bayesian-model",  type=toBool, default=True)
-@option("--scale-median-model", type=toBool, default=False)
-@option("-e", "--experiment-number", default="1")
-@option('-x', '--resource-x', default="taskinputsizeuncompressed")
-@option('-y', '--resource-y', default="realtime")
-@analysis
-def node_task_error(args):
+@defaultanalysis
+def node_task_error(args, results):
     """
     Creates a plot showing the average relative error for each task and node
     for the given workflow.
     """
-    results = run_experiment(
-        resource_x=args.resource_x,
-        resource_y=args.resource_y,
-        scale_bayesian_model=args.scale_bayesian_model,
-        scale_median_model=args.scale_median_model,
-        experiment_number=args.experiment_number,
-        workflows=[args.workflow])
-    nodes = results["node"].unique()
+    results = results[results["workflow"] == args.workflow]
 
-    def average_relative_error(x):
-        return np.mean(np.abs(x["y"] - x["yhat"]) / x["yhat"])
-    grouped = results.groupby(["node", "task"]).apply(average_relative_error)
+    grouped = results.groupby(["node", "task"])["rae"].mean()
     fig, axs = plt.subplots(1, 1, figsize=(5, 5))
-    for node in nodes:
+    for node in NODES:
         task_err_map = grouped[node].to_dict()
         axs.scatter(task_err_map.keys(), task_err_map.values())
     axs.set_xticklabels(list(task_err_map.keys()), rotation=-90, ha='left')
@@ -196,7 +114,7 @@ def node_task_error(args):
     axs.set_xlabel("task")
     axs.set_title(
         f"average relative error per task and node for {args.workflow}")
-    axs.legend(nodes)
+    axs.legend(NODES)
     fig.tight_layout()
     if args.save != "":
         plt.savefig(args.save)
