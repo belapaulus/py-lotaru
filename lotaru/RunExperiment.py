@@ -49,6 +49,6 @@ def run_experiment(workflows=WORKFLOWS, nodes=NODES, experiment_number="0",
                 rae = np.abs((y - yhat) / yhat)
                 for i in range(x.size):
                     results.loc[results.index.size] = [
-                        workflow, task, node, model_type, x[i], yhat[i], y[i], rae[i]]
+                        workflow, task, node, model_type, x[i][0], yhat[i], y[i], rae[i]]
 
     return results
