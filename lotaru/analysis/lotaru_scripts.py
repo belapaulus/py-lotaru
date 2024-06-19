@@ -21,7 +21,6 @@ def node_error(args, results):
     Returns the median relative prediction error for each node, over all
     workflows and tasks.
     """
-    print("node_error was called with: ", args)
     median_errors = results.groupby("node")["rae"].median()
     print(median_errors.sort_index())
 

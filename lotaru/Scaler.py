@@ -15,8 +15,17 @@ class Scaler:
             return
         if scaler_type == "a":
             factors = self._get_lotaru_a_factors()
+            # TODO remove switch nodes by fixing files
+            switch_nodes = {
+                "asok01": "asok02",
+                "asok02": "asok01",
+                "c2": "c2",
+                "local": "local",
+                "n1": "n1",
+                "n2": "n2",
+            }
             self.get_factor = lambda node, task: factors.loc[(
-                node, task), "factor"]
+                switch_nodes[node], task), "factor"]
             return
         # TODO error unknown scaler_type
 

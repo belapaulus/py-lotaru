@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from lotaru.Constants import TRACE_DIR
+from lotaru.Constants import TRACE_DIR, WORKFLOWS, NODES, TRACE_HEADER
 
 
 class TraceReader:
@@ -15,14 +15,8 @@ class TraceReader:
     def get_trace(self, workflow, node):
         if (workflow + node) not in self.wf_node_trace_map:
             path = os.path.join(self.trace_dir, node, workflow, "trace.csv")
-            dtypes = {
-                "label": "string",
-                "machine": "string",
-                "workflow": "string",
-                "task": "string",
-            }
-            self.wf_node_trace_map[workflow +
-                                   node] = pd.read_csv(str(path), dtype=dtypes)
+            self.wf_node_trace_map[workflow + node] = pd.read_csv(
+                str(path), dtype=TRACE_HEADER)
         return self.wf_node_trace_map[workflow + node]
 
     def get_task_data(self, workflow, task, node):
@@ -76,6 +70,15 @@ class TraceReader:
     def get_test_data(self, workflow, task, node):
         all_data = self.get_trace(workflow, node)
         test_data = all_data[all_data["label"] == "test"]
-        task_test_data = test_data[test_data["task"].apply(
-            lambda s: s == task)]
+        task_test_data = test_data[test_data["task"] == task]
         return task_test_data
+
+    def get_all_test_data(self):
+        df = pd.DataFrame({k: pd.Series(dtype=v)
+                          for k, v in TRACE_HEADER.items()})
+        for workflow, tasks in WORKFLOWS.items():
+            for task in tasks:
+                for node in NODES:
+                    new = self.get_test_data(workflow, task, node)
+                    df = pd.concat([df, new])
+        return df

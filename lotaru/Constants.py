@@ -26,6 +26,28 @@ WORKFLOWS = {
 }
 NODES = ["asok01", "asok02", "n1", "n2", "c2", "local"]
 TRACE_DIR = path.join("data", "traces")
+TRACE_HEADER = {
+    "label":                     "string",
+    "machine":                   "string",
+    "workflow":                  "string",
+    "numbersequences":           "int64",
+    "task":                      "string",
+    "workflowinputsize":         "int64",
+    "realtime":                  "int64",
+    "%cpu":                      "float64",
+    "rss":                       "int64",
+    "rchar":                     "int64",
+    "wchar":                     "int64",
+    "cpus":                      "int64",
+    "read_bytes":                "int64",
+    "write_bytes":               "int64",
+    "vmem":                      "int64",
+    "memory":                    "int64",
+    "peak_rss":                  "int64",
+    "taskinputsize":             "int64",
+    "taskinputsizeuncompressed": "int64",
+    "workflowinputuncompressed": "int64",
+}
 BENCH_DIR = path.join("data", "benchmarks")
 LOTARU_G_BENCH = path.join(BENCH_DIR, "lotaru-g.csv")
 LOTARU_A_BENCH = path.join(BENCH_DIR, "lotaru-a.csv")

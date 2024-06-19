@@ -1,3 +1,4 @@
+import json
 from lotaru.RunExperiment import run_experiment
 from lotaru.Constants import LOTARU_A_BENCH, LOTARU_G_BENCH
 """
@@ -42,27 +43,23 @@ def option(*args, **kwargs):
 def defaultanalysis(func):
     @wraps(func)
     def func_to_return(arg_parser, arg_string):
-        arg_parser.add_argument("--scale-bayesian-model",
-                                type=toBool, default=True)
-        arg_parser.add_argument("--scale-median-model",
-                                type=toBool, default=False)
-        arg_parser.add_argument("-e", "--experiment-number", default="1")
-        arg_parser.add_argument('--scaler', choices=['a', 'g'], default='g')
+        arg_parser.add_argument('-e', '--estimator', default='lotaru-g',
+                                choices=['lotaru-g', 'lotaru-a', 'online-m', 'online-p'])
+        arg_parser.add_argument("-n", "--experiment-number", default="1")
+        arg_parser.add_argument('-o', '--estimator-opts', default="{}",
+                                help='json containing estimator options')
         arg_parser.add_argument('-x', '--resource-x',
                                 default="taskinputsizeuncompressed")
         arg_parser.add_argument('-y', '--resource-y', default="realtime")
         args = arg_parser.parse_args(arg_string)
-        scaler_bench_file = {
-            'a': LOTARU_A_BENCH,
-            'g': LOTARU_G_BENCH,
-        }
-        r = run_experiment(experiment_number=args.experiment_number,
-                           resource_x=args.resource_x,
-                           resource_y=args.resource_y,
-                           scaler_type=args.scaler,
-                           scaler_bench_file=scaler_bench_file[args.scaler],
-                           scale_median_model=args.scale_median_model,
-                           scale_bayesian_model=args.scale_bayesian_model)
+        print(args)
+        r = run_experiment(
+            estimator=args.estimator,
+            estimator_opts=json.loads(args.estimator_opts),
+            experiment_number=args.experiment_number,
+            resource_x=args.resource_x,
+            resource_y=args.resource_y,
+        )
         func(args, r)
     return func_to_return
 
