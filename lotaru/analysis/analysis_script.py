@@ -44,7 +44,7 @@ def defaultanalysis(func):
     @wraps(func)
     def func_to_return(arg_parser, arg_string):
         arg_parser.add_argument('-e', '--estimator', default='lotaru-g',
-                                choices=['lotaru-g', 'lotaru-a', 'online-m', 'online-p'])
+                                choices=['lotaru-g', 'lotaru-a', 'online-m', 'online-p', 'naive', 'perfect'])
         arg_parser.add_argument("-n", "--experiment-number", default="1")
         arg_parser.add_argument('-o', '--estimator-opts', default="{}",
                                 help='json containing estimator options')

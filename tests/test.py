@@ -4,7 +4,6 @@ import io
 import pandas as pd
 import numpy as np
 import context
-from lotaru.OnlineInstance import KSModel
 from lotaru.Constants import NODES
 from lotaru.RunExperiment import run_experiment
 from lotaru.TraceReader import TraceReader
@@ -18,7 +17,7 @@ class TestLotaru(unittest.TestCase):
         cls.tr = TraceReader()
 
     def test_lotaru(self):
-        for estimator in ["online-m", "lotaru-g", "lotaru-a"]:
+        for estimator in ['perfect', "naive", "online-m", "lotaru-g", "lotaru-a"]:
             for experiment_number in ["1", "2"]:
                 print(
                     f"testing {estimator} with experiment number {experiment_number}")
@@ -36,19 +35,17 @@ class TestLotaru(unittest.TestCase):
 
     def get_py_lotaru_predictions(self, experiment_number="1", estimator="lotaru-g"):
         df = run_experiment(
-            experiment_number=experiment_number, model=estimator)
+            experiment_number=experiment_number, estimator=estimator)
         df.set_index(INDEX, inplace=True)
         df.drop(["yhat", "rae"], axis=1, inplace=True)
         return df.sort_index()
 
     def get_java_lotaru_predictions(self, experiment_number="1", estimator="lotaru-g"):
         rename_estimator = {
-            "lotaru-g": "lotaru-g",
-            "lotaru-a": "lotaru-a",
             "online-m": "onlinem",
             "online-p": "onlinep",
         }
-        estimator = rename_estimator[estimator]
+        estimator = rename_estimator.get(estimator, estimator)
         # read all prediction files, for each file skip the header and append
         # the predictions to data, construct dataframe from data
         header = "node,workflow,task,estimator,feature,wfinputsize,y,yhat,deviation"
