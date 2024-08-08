@@ -26,6 +26,7 @@ def node_error(args, results):
 
 
 @register(registered_scripts)
+@option('--output-file', default='-')
 @defaultanalysis
 def results_csv(args, results):
     """
