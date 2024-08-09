@@ -26,6 +26,66 @@ def node_error(args, results):
 
 
 @register(registered_scripts)
+@option('-f', '--output-folder', default='results')
+@option('-x', '--resource-x', default='taskinputsizeuncompressed')
+@option('-y', '--resource-y', action='append')
+@analysis
+def all_results_csv(args):
+    """
+    Writes predictions by all estimators (lotaru variants both scaled and
+    unscaled bayesian models) for all given ys and all experiment numbers to
+    folder specified by '-f/--output-folder'. Example:
+
+    python -m lotaru run all_results_csv -y 'rss' -y 'wchar'
+
+    '-f/--output-folder' defaults to 'results', '-x/--resource-x' defaults to
+    'taskinputsizeuncompressed'.
+    """
+    print(args)
+    if args.resource_y is None:
+        print("no resource_y given", file=sys.stderr)
+        exit(-1)
+    if os.path.exists(args.output_folder):
+        print("refusing to overwrite existing path", file=sys.stderr)
+        exit(-1)
+    os.mkdir(args.output_folder)
+    estimators = {
+        'lotaru-g': [{'scale_bayesian_model': False}, {'scale_bayesian_model': True}],
+        'lotaru-a': [{'scale_bayesian_model': False}, {'scale_bayesian_model': True}],
+        'online-m': [{}],
+        'online-p': [{}],
+        'naive': [{}],
+        'perfect': [{}],
+    }
+    for estimator, options in estimators.items():
+        os.mkdir(os.path.join(args.output_folder, estimator))
+        # exp_n, opts, y
+        for y in args.resource_y:
+            path = os.path.join(args.output_folder, estimator, y)
+            os.mkdir(path)
+            for opt in options:
+                for experiment_number in ["0", "1", "2"]:
+                    print(estimator, y, opt, experiment_number)
+                    r = run_experiment(
+                        estimator=estimator,
+                        estimator_opts=opt.copy(),
+                        experiment_number=experiment_number,
+                        resource_x=args.resource_x,
+                        resource_y=y
+                    )
+                    out = r.to_csv(sep=";",
+                                   columns=["workflow", "task", "node",
+                                            "x", "y", "yhat", "rae"],
+                                   header=True, index=False)
+                    opt_string = '_'.join(
+                        [f'{k}_{v}' for k, v in opt.items()])
+                    file = os.path.join(
+                        path, f'exp_n_{experiment_number}_{opt_string}')
+                    with open(file, "w") as f:
+                        f.write(out)
+
+
+@register(registered_scripts)
 @option('--output-file', default='-')
 @defaultanalysis
 def results_csv(args, results):
@@ -61,8 +121,8 @@ def results_csv(args, results):
     if args.output_file == "-":
         print(out)
         return
-    if os.path.isfile(args.output_file):
-        print("refusing to overwrite existing file", file=sys.stderr)
+    if os.path.exists(args.output_file):
+        print("refusing to overwrite existing path", file=sys.stderr)
         exit(-1)
     with open(args.output_file, "w") as file:
         file.write(out)
