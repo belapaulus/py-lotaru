@@ -30,15 +30,28 @@ def node_error(args, results):
 @defaultanalysis
 def results_csv(args, results):
     """
-    Writes the predictions for all workflows, tasks, nodes, and given
-    experiment numbers to a given file or stdout. If '-o' is not specified or
-    '-o -' is given the predictions are written to stdout. In any other case
-    the argument to '-o' is treated as the path of the file to write to. This
+    Writes the predictions for all workflows, tasks and nodes for the given
+    experiment number, estimator and resources to a given file or stdout.
+    If '--output-file' is not specified or '-output-file -' is given the
+    predictions are written to stdout. In any other case the argument to
+    '--output-file' is treated as the path of the file to write to. This
     script refuses to overwrite existing files.
 
-    Output format is as follows:
+    The '--estimator-opts' option can be used to specify estimator options
+    in json. For example to disable the the scaling of the output of the
+    bayesian models to each nodes performance using the 'lotaru-g' estimator,
+    the following command line can be used:
 
-    workflow;task;node;x;y;yhat;rae
+        python -m lotaru run results_csv -e 'lotaru-g' -o '{"scale_bayesian_model": false}'
+
+    So far, the only valid estimator options are:
+
+     - 'scale_bayesian_model <bool>'
+     - 'scale_median_model <bool>'
+
+    Both only for the 'lotaru-g' and 'lotaru-a' estimators.
+
+    The output format of this scipt is: 'workflow;task;node;x;y;yhat;rae'
 
     """
     out = results.to_csv(sep=";",

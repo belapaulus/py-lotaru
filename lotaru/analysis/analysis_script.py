@@ -1,6 +1,6 @@
 import json
+import textwrap
 from lotaru.RunExperiment import run_experiment
-from lotaru.Constants import LOTARU_A_BENCH, LOTARU_G_BENCH
 """
 Data structures, functions and decorators to define and register analysis
 scripts that can be executed via the cli.
@@ -19,7 +19,7 @@ from functools import wraps
 class AnalysisScript:
     def __init__(self, name, description, func):
         self.name = name
-        self.description = description
+        self.description = textwrap.dedent(description)
         self.func = func
 
 

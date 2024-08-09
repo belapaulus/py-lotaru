@@ -1,4 +1,5 @@
 import sys
+import textwrap
 import argparse
 
 from lotaru.analysis.lotaru_scripts import registered_scripts as lotaru_scripts
@@ -43,12 +44,28 @@ class Cli:
         Print the help message for a given analysis script. This is equivalent
         to run <script> --help
         """
+        if len(args) == 0:
+            msg = """
+                Usage: 'python -m lotaru describe (<script_name>|<script_number>)'
+
+                Available scripts can be listed with 'python -m lotaru list'.
+            """
+            print(textwrap.dedent(msg), file=sys.stderr)
+            exit(-1)
         self.run([args[0], "--help"])
 
     def run(self, args):
         """
         Execute a given analysis script.
         """
+        if len(args) == 0:
+            msg = """
+                Usage: 'python -m lotaru run (<script_name>|<script_number>)'
+
+                Available scripts can be listed with 'python -m lotaru list'.
+            """
+            print(textwrap.dedent(msg), file=sys.stderr)
+            exit(-1)
         s = args[0]
         try:
             if s.isdigit():
@@ -64,6 +81,7 @@ class Cli:
             exit(-1)
         parser = argparse.ArgumentParser(
             prog="python -m lotaru run {}".format(script.name),
+            formatter_class=argparse.RawDescriptionHelpFormatter,
             description=script.description)
         script.func(parser, args[1:])
 
@@ -80,11 +98,11 @@ class Cli:
 
             Run help <command> for more information.
             """.format(", ".join(self.commands.keys()))
-            print(msg)
+            print(textwrap.dedent(msg))
             return
 
         if command[0] in self.commands:
-            print(self.commands[command[0]].__doc__)
+            print(textwrap.dedent(self.commands[command[0]].__doc__))
             return
 
         print("unknown command: " + command[0])
